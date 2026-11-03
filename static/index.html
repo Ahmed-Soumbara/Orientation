@@ -1,0 +1,810 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Prototype Orientation Lycée</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout : barre d'app collante + onglets ; colonne de 1100px ; cartes seulement pour les blocs autonomes ; graphes dans des conteneurs défilants */
+:root{
+  --paper:#F5F6FA; --surface:#FFFFFF; --surface-2:#EEF0F7; --ink:#151829; --muted:#5B6180; --line:#DCDFEB;
+  --accent:#2742C0; --accent-soft:#E7EBFB; --accent-ink:#FFFFFF;
+  --good:#1D7A4C; --good-soft:#E3F3EA; --warn:#A86300; --warn-soft:#FBF0DC; --bad:#B12F2A; --bad-soft:#F9E4E2;
+  --bridge:#B07A00;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-data:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0F111B; --surface:#171A27; --surface-2:#1E2233; --ink:#E8EAF5; --muted:#9BA1BF; --line:#2A2E45;
+  --accent:#8EA1FF; --accent-soft:#222A56; --accent-ink:#0F111B;
+  --good:#5BC38D; --good-soft:#15301F; --warn:#E6A84B; --warn-soft:#33260F; --bad:#F27D73; --bad-soft:#3A1916;
+  --bridge:#E9B94A; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#0F111B; --surface:#171A27; --surface-2:#1E2233; --ink:#E8EAF5; --muted:#9BA1BF; --line:#2A2E45;
+  --accent:#8EA1FF; --accent-soft:#222A56; --accent-ink:#0F111B;
+  --good:#5BC38D; --good-soft:#15301F; --warn:#E6A84B; --warn-soft:#33260F; --bad:#F27D73; --bad-soft:#3A1916;
+  --bridge:#E9B94A; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--font-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:1.75rem} h2{font-size:1.3rem} h3{font-size:1.05rem}
+p{margin:0}
+a{color:var(--accent)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--font-data);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+.label{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.t{font-weight:600}
+
+header.app{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar,.notice,main{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.bar{padding-block:12px 0;display:flex;flex-direction:column;gap:10px}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand b{font-family:var(--font-display);font-size:1.3rem}
+.brand .tag{font-size:.8rem;color:var(--muted)}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav.tabs button{border:0;background:none;padding:8px 12px 10px;border-bottom:3px solid transparent;color:var(--muted);font-weight:600;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav.tabs button:hover{color:var(--ink)}
+.notice{padding-block:12px 0}
+.notice div{display:flex;gap:10px;align-items:flex-start;background:var(--warn-soft);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.notice.real div{background:var(--good-soft)}
+.notice strong{white-space:nowrap}
+main{padding-block:20px 48px;display:flex;flex-direction:column;gap:20px}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:20px}
+.grid2.even{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:820px){.grid2,.grid2.even{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:10px}
+.lead{color:var(--muted);max-width:68ch}
+
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
+.z-coeur{background:var(--good-soft);color:var(--good)}
+.z-marge{background:var(--warn-soft);color:var(--warn)}
+.z-dessous{background:var(--bad-soft);color:var(--bad)}
+.z-coeur::before,.z-marge::before,.z-dessous::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.chip.out{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:600}
+.chip.pass{background:transparent;border:1px dashed var(--bridge);color:var(--bridge)}
+
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.link{border:0;background:none;padding:0;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.btn:disabled{opacity:.5;cursor:default}
+.big{font-family:var(--font-data);font-size:2.1rem;line-height:1}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.95rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0}
+
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:.88rem;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.fline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fline>.label{min-width:84px}
+
+.frow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:9px 10px;border-radius:8px;cursor:pointer;border:0;background:none;text-align:left;width:100%}
+.frow:hover{background:var(--accent-soft)}
+.frow .meta{font-size:.85rem;color:var(--muted)}
+.frow .right{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+
+/* Carte des voies */
+.graphbox{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.graphbox svg{display:block}
+.gnode{cursor:pointer}
+.gnode rect.box{fill:var(--surface);stroke:var(--line);stroke-width:1.2}
+.gnode:hover rect.box,.gnode.sel rect.box{stroke:var(--accent);stroke-width:2}
+.gnode.goal rect.box{stroke:var(--accent);stroke-width:2.4}
+.gnode text{fill:var(--ink);font-family:var(--font-body);font-weight:700;font-size:12.5px}
+.gnode text.sub{fill:var(--muted);font-weight:600;font-size:10.5px}
+.edge{fill:none;stroke:var(--line);stroke-width:1.6}
+.edge.pass{stroke:var(--bridge);stroke-dasharray:5 4}
+.edge.hi{stroke:var(--accent);stroke-width:2.6}
+.edge.pass.hi{stroke:var(--bridge);stroke-width:2.8}
+.dim{opacity:.18}
+.colhead{font-family:var(--font-body);font-weight:700;font-size:11px;letter-spacing:.1em;fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--line);vertical-align:middle;margin-right:6px}
+.legend i.pass{border-top:2px dashed var(--bridge)}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+/* Passerelles */
+.bridges{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.bridge{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.route{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.84rem;font-weight:700}
+.route span{background:var(--surface-2);border-radius:6px;padding:2px 8px}
+.route em{font-style:normal;color:var(--bridge)}
+.bridge .grow{flex:1}
+
+/* Explorateur hiérarchique */
+details.dom{border-top:1px solid var(--line);padding:10px 0}
+details.dom:first-of-type{border-top:0}
+details>summary{cursor:pointer;list-style:none;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"+";width:22px;height:22px;flex:none;display:grid;place-items:center;border:1px solid var(--line);border-radius:6px;font-family:var(--font-data);font-size:.85rem;color:var(--muted)}
+details[open]>summary::before{content:"−"}
+details.voie{margin:8px 0 0 11px;padding-left:20px;border-left:2px solid var(--line)}
+.etabs{margin:6px 0 0 11px;padding-left:20px;border-left:2px dashed var(--line);display:flex;flex-direction:column}
+.count{font-family:var(--font-data);font-size:.8rem;color:var(--muted)}
+
+/* Fiche */
+.hist{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end;height:160px;padding-top:6px}
+.hcol{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.hbar{width:100%;max-width:70px;background:var(--line);border-radius:6px 6px 0 0;min-height:3px}
+.hcol.me .hbar{background:var(--accent)}
+.hcol .v{font-family:var(--font-data);font-size:.85rem}
+.hlab{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;text-align:center;font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:6px}
+.hlab .me{color:var(--accent);font-weight:700}
+ul.clean{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.alert{border-left:4px solid var(--warn);background:var(--warn-soft);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.95rem}
+.alert.bad{border-left-color:var(--bad);background:var(--bad-soft)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.n,th.n{text-align:right;font-family:var(--font-data);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Plan */
+.obj{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.obj:first-child{border-top:0}
+.obj input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent)}
+.obj.done .t{text-decoration:line-through;color:var(--muted)}
+
+/* Suivi */
+.journey{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.journey svg{display:block;min-width:720px;width:100%;height:auto}
+.journey text{font-family:var(--font-data)}
+.sbar{display:grid;grid-template-columns:150px minmax(0,1fr) 48px;gap:10px;align-items:center;font-size:.92rem}
+@media (max-width:480px){.sbar{grid-template-columns:110px minmax(0,1fr) 44px}}
+.strack{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.sfill{height:100%;border-radius:5px}
+
+/* Profil, données */
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:.85rem;font-weight:600;color:var(--muted)}
+.field input,.field select,input[type=search]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.pair{display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:6px}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;cursor:pointer}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+code{font-family:var(--font-data);font-size:.85em;background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+@media (prefers-reduced-motion:no-preference){.frow,.btn,.seg button{transition:background .15s,border-color .15s}}
+</style>
+
+<header class="app">
+  <div class="bar">
+    <div class="brand"><b>Orientation lycée</b><span class="tag">nom à trouver · prototype Challenge Projets d'Entreprendre 2026</span></div>
+    <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  </div>
+</header>
+<div id="notice"></div>
+<main id="view"></main>
+
+<script>
+/* ================= RÉFÉRENTIELS ================= */
+const MENTIONS=["Sans mention","Assez bien","Bien","Très bien"];
+const SEUILS=[10,12,14,16];
+const TRIM=["2nde · T1","2nde · T2","2nde · T3","1re · T1","1re · T2","1re · T3","Tle · T1","Tle · T2","Tle · T3"];
+const SUBJECTS={maths:"Mathématiques",francais:"Français",philo:"Philosophie",hg:"Histoire-géographie",anglais:"Anglais (LVA)",lv2:"Espagnol (LVB)",ses:"SES",hggsp:"HGGSP",pc:"Physique-chimie",svt:"SVT",ensci:"Enseignement scientifique"};
+const SPES=["Mathématiques","Physique-chimie","SVT","SES","HGGSP","HLP","LLCER Anglais","NSI","Sciences de l'ingénieur","Arts","EPPCS"];
+const BACLBL={G:"Générale",T:"Technologique",P:"Professionnelle"};
+const DOMS={sci:"Sciences et ingénierie",num:"Numérique",sante:"Santé",eco:"Économie, gestion, commerce",droit:"Droit et politique",lettres:"Lettres et sciences humaines",arts:"Arts et design",sport:"Sport",autre:"Autres formations"};
+const KEYSUBJ={sci:["maths","pc"],num:["maths","ensci"],sante:["svt","pc"],eco:["maths","ses","anglais"],droit:["francais","hg"],lettres:["francais","hg","philo"],arts:["francais"],sport:["svt","ensci"],autre:["francais","maths"]};
+
+/* Voies après le bac. p = mentions des admis [sans, AB, B, TB] et taux = taux d'accès : ILLUSTRATIFS tant que l'open data n'est pas importé.
+   rx = motif pour rattacher les lignes de l'open data à la voie. */
+const VOIES=[
+ {id:"cpge_mp",name:"CPGE MPSI / MP2I",type:"Classe prépa",dom:"sci",duree:2,taux:30,p:[1,9,35,55],bac:{G:1,T:.1,P:0},spes:["Mathématiques"],plus:["Physique-chimie","NSI","Sciences de l'ingénieur"],frais:0,desc:"Deux années de maths, physique et informatique intensives pour préparer les concours des écoles d'ingénieurs.",deb:["Concours des écoles d'ingénieurs","Concours ENS","Équivalences en L2 ou L3"],rx:/mpsi|mp2i|mathematiques, physique et sciences de l'ingenieur/},
+ {id:"insa",name:"École d'ingénieurs post-bac (prépa intégrée)",type:"École d'ingénieurs",dom:"sci",duree:5,taux:35,p:[3,20,40,37],bac:{G:1,T:.15,P:0},spes:["Mathématiques"],plus:["Physique-chimie","NSI"],frais:600,desc:"Diplôme d'ingénieur en 5 ans sans concours après la prépa : le cycle préparatoire est intégré. Frais de 600 €/an dans le public, 7 000 à 9 000 €/an dans le privé.",deb:["Diplôme d'ingénieur (grade de master)"],rx:/formation d'ingenieur|ecole d'ingenieur|cycle preparatoire integre|prepa integree/},
+ {id:"lic_maths",name:"Licence Maths ou Informatique",type:"Licence",dom:"sci",duree:3,taux:80,p:[25,35,25,15],bac:{G:1,T:.2,P:0},spes:[],plus:["Mathématiques","NSI"],frais:178,desc:"Formation universitaire théorique. Ouvre aux masters et aux admissions parallèles en école d'ingénieurs.",deb:["Masters (data, maths appliquées, informatique)","Enseignement"],rx:/licence.*(mathematique|informatique)/},
+ {id:"ats",name:"Prépa ATS",type:"Prépa après BTS ou BUT",dom:"sci",duree:1,post:true,taux:null,p:null,bac:{},spes:[],plus:[],frais:0,desc:"Un an de prépa réservé aux titulaires d'un BTS ou d'un BUT, pour passer le concours ATS des écoles d'ingénieurs.",deb:["Concours ATS"],rx:/\bats\b/},
+ {id:"but_info",name:"BUT Informatique",type:"BUT",dom:"num",duree:3,taux:25,p:[10,35,38,17],bac:{G:1,T:.9,P:.2},spes:[],plus:["Mathématiques","NSI"],frais:178,alternance:true,desc:"Formation professionnalisante en IUT, avec stages et alternance possible. Places réservées aux bacs technologiques.",deb:["Développeur, administrateur systèmes et réseaux","Admission parallèle en école d'ingénieurs"],rx:/but.*informatique/},
+ {id:"bts_sio",name:"BTS SIO",type:"BTS",dom:"num",duree:2,taux:35,p:[40,38,17,5],bac:{G:.8,T:1,P:.8},spes:[],plus:["NSI"],frais:0,alternance:true,desc:"Services informatiques aux organisations, option réseaux (SISR) ou développement (SLAM).",deb:["Technicien réseau, développeur","Prépa ATS, licence professionnelle"],rx:/bts.*(services informatiques|sio\b)/},
+ {id:"pass",name:"PASS (accès santé)",type:"Licence santé",dom:"sante",duree:1,taux:85,p:[10,25,35,30],bac:{G:1,T:.1,P:0},spes:[],plus:["SVT","Physique-chimie"],frais:178,desc:"Une majeure santé et une mineure disciplinaire. La vraie sélection a lieu en fin d'année pour entrer en médecine, maïeutique, odontologie, pharmacie ou kiné.",deb:["MMOPK","Sinon L2 de la mineure"],rx:/parcours d'acces specifique sante|\bpass\b/},
+ {id:"las",name:"LAS (licence option santé)",type:"Licence",dom:"sante",duree:3,taux:75,p:[15,35,30,20],bac:{G:1,T:.2,P:0},spes:[],plus:["SVT","Physique-chimie"],frais:178,desc:"Une licence classique (biologie, droit, psychologie…) avec une option santé. Deux chances de candidater en MMOPK.",deb:["MMOPK","Suite de la licence"],rx:/acces sante|\blas\b|option sante/},
+ {id:"ifsi",name:"Soins infirmiers (IFSI)",type:"Institut",dom:"sante",duree:3,taux:40,p:[30,40,22,8],bac:{G:1,T:.8,P:.3},spes:[],plus:["SVT"],frais:178,desc:"Diplôme d'État d'infirmier, avec une grande part de stages à l'hôpital.",deb:["Infirmier à l'hôpital, en clinique ou en libéral"],rx:/infirmier|ifsi/},
+ {id:"cpge_ecg",name:"CPGE ECG",type:"Classe prépa",dom:"eco",duree:2,taux:50,p:[5,25,40,30],bac:{G:1,T:.1,P:0},spes:["Mathématiques"],plus:["SES","HGGSP"],frais:0,desc:"Prépa économique et commerciale, pour les concours BCE et Ecricome des écoles de commerce.",deb:["Programme grande école","Équivalences à l'université"],rx:/economique et commerciale|\becg\b/},
+ {id:"ecole_com",name:"École de commerce post-bac",type:"École privée",dom:"eco",duree:5,taux:45,p:[10,30,35,25],bac:{G:1,T:.7,P:.3},spes:[],plus:["SES"],frais:12500,prive:true,alternance:true,desc:"Bachelor en 3 ans ou programme en 5 ans dès le bac, le plus souvent dans une école privée. Frais élevés : regarde les bourses et l'alternance.",deb:["Marketing, vente, gestion","Master grande école"],rx:/ecole de commerce|bachelor|programme grande ecole/},
+ {id:"lic_eco",name:"Licence Économie-gestion",type:"Licence",dom:"eco",duree:3,taux:72,p:[30,38,22,10],bac:{G:1,T:.4,P:0},spes:[],plus:["Mathématiques","SES"],frais:178,desc:"Bases d'économie, de gestion et de statistiques. Mène aux masters ou aux concours d'admission parallèle.",deb:["Masters économie, finance, gestion","Concours AST en école de commerce"],rx:/licence.*econom/},
+ {id:"but_tc",name:"BUT Techniques de commercialisation",type:"BUT",dom:"eco",duree:3,taux:30,p:[18,42,30,10],bac:{G:1,T:.9,P:.2},spes:[],plus:["SES"],frais:178,alternance:true,desc:"Commerce et marketing en IUT, avec stages et alternance possible dès la 2e année.",deb:["Commercial, chargé de clientèle, assistant marketing","Admission parallèle en école de commerce"],rx:/but.*techniques de commercialisation/},
+ {id:"but_gea",name:"BUT GEA",type:"BUT",dom:"eco",duree:3,taux:35,p:[20,42,28,10],bac:{G:1,T:.9,P:.2},spes:[],plus:["SES","Mathématiques"],frais:178,alternance:true,desc:"Gestion des entreprises et des administrations : comptabilité, finance, RH.",deb:["Gestion, comptabilité, RH","Admission parallèle en école de commerce"],rx:/but.*gestion des entreprises/},
+ {id:"bts_com",name:"BTS commerce (MCO, NDRC)",type:"BTS",dom:"eco",duree:2,taux:45,p:[45,38,14,3],bac:{G:.8,T:1,P:.9},spes:[],plus:[],frais:0,alternance:true,desc:"Diplômes courts et tournés vers le terrain, très souvent en alternance.",deb:["Manager de rayon, commercial","Bachelor, admission en école de commerce"],rx:/bts.*(management commercial|negociation)/},
+ {id:"bts_cg",name:"BTS Comptabilité et gestion",type:"BTS",dom:"eco",duree:2,taux:55,p:[45,38,14,3],bac:{G:.8,T:1,P:.6},spes:[],plus:[],frais:0,alternance:true,desc:"Comptabilité et gestion, première marche vers l'expertise comptable (DCG).",deb:["Assistant comptable","DCG, licence professionnelle"],rx:/bts.*comptab/},
+ {id:"lic_droit",name:"Licence de droit",type:"Licence",dom:"droit",duree:3,taux:66,p:[25,38,25,12],bac:{G:1,T:.3,P:0},spes:[],plus:["HGGSP","SES","HLP"],frais:178,desc:"Droit civil, constitutionnel, pénal. Beaucoup de travail personnel ; la sélection se fait surtout en master.",deb:["Master de droit","Avocat, notaire, magistrat, juriste"],rx:/licence.*droit/},
+ {id:"iep",name:"Sciences Po ou IEP",type:"Grand établissement",dom:"droit",duree:3,taux:12,p:[0,5,25,70],bac:{G:1,T:.1,P:0},spes:[],plus:["HGGSP","SES","LLCER Anglais"],frais:null,desc:"Science politique, droit, économie, histoire, avec une année à l'étranger. Frais selon les revenus des parents.",deb:["Masters Sciences Po","Journalisme, diplomatie, fonction publique"],rx:/sciences po|institut d'etudes politiques|\biep\b/},
+ {id:"cpge_lettres",name:"Hypokhâgne (CPGE lettres)",type:"Classe prépa",dom:"lettres",duree:2,taux:55,p:[5,25,40,30],bac:{G:1,T:.1,P:0},spes:[],plus:["HLP","LLCER Anglais","HGGSP"],frais:0,desc:"Lettres, philosophie, histoire, langues. Prépare aux ENS et donne des équivalences à l'université.",deb:["ENS","Sciences Po, écoles de journalisme","Licence en L2 ou L3"],rx:/lettres|hypokhagne|\ba\/l\b/},
+ {id:"staps",name:"Licence STAPS",type:"Licence",dom:"sport",duree:3,taux:40,p:[25,40,25,10],bac:{G:1,T:.3,P:.1},spes:[],plus:["EPPCS","SVT"],frais:178,desc:"Sciences du sport : physiologie, entraînement, management. Formation très demandée.",deb:["Professeur d'EPS","Coach, préparateur physique"],rx:/staps/},
+ {id:"dnmade",name:"DN MADE (design)",type:"Diplôme national",dom:"arts",duree:3,taux:20,p:[20,40,28,12],bac:{G:1,T:.9,P:.3},spes:[],plus:["Arts"],frais:0,desc:"Design graphique, objet, espace, mode. Le dossier artistique compte beaucoup.",deb:["Designer graphique, objet, espace","DSAA, master design"],rx:/dn made|dnmade|metiers d'art et du design/}
+];
+/* Objectifs à bac+3 / bac+5 */
+const OBJS=[
+ {id:"inge",name:"École d'ingénieurs",dom:"sci",duree:"Bac+5",desc:"Diplôme d'ingénieur, grade de master. Accès par prépa, prépa intégrée ou admission parallèle."},
+ {id:"medecine",name:"Médecine et santé (MMOPK)",dom:"sante",duree:"Bac+6 à bac+12",desc:"Médecine, maïeutique, odontologie, pharmacie, kinésithérapie."},
+ {id:"infirmier",name:"Infirmier diplômé d'État",dom:"sante",duree:"Bac+3",desc:"Métier en forte demande, avec des évolutions possibles vers la pratique avancée."},
+ {id:"pge",name:"Grande école de commerce",dom:"eco",duree:"Bac+5",desc:"Programme grande école, grade de master. L'alternance et les bourses réduisent le coût."},
+ {id:"dcg",name:"Expertise comptable",dom:"eco",duree:"Bac+8",desc:"DCG (bac+3), DSCG (bac+5) puis 3 ans de stage avant le diplôme d'expert-comptable."},
+ {id:"master",name:"Master à l'université",dom:"sci",duree:"Bac+5",desc:"Sélection à l'entrée du M1, avec un très large choix de spécialités."},
+ {id:"avocat",name:"Avocat (CRFPA)",dom:"droit",duree:"Bac+6 minimum",desc:"Master 1 de droit, examen d'entrée au CRFPA, puis 18 mois d'école d'avocats."},
+ {id:"scpo",name:"Master Sciences Po ou IEP",dom:"droit",duree:"Bac+5",desc:"Affaires publiques, journalisme, droit, relations internationales."},
+ {id:"ens",name:"ENS (normalien)",dom:"lettres",duree:"Bac+5 et plus",desc:"Écoles de la recherche et de l'enseignement supérieur ; les élèves fonctionnaires sont rémunérés."},
+ {id:"prof",name:"Professeur (master MEEF)",dom:"lettres",duree:"Bac+5",desc:"Master MEEF puis concours (CAPES, CAPEPS, professeur des écoles)."},
+ {id:"design",name:"Designer (DSAA, master)",dom:"arts",duree:"Bac+5",desc:"Diplôme supérieur d'arts appliqués ou master design."}
+];
+/* [depuis, vers, voie|passerelle, explication] */
+const EDGES=[
+ ["cpge_mp","inge","voie","Concours des écoles"],["cpge_mp","ens","voie","Concours ENS"],["insa","inge","voie","Passage en cycle ingénieur"],
+ ["lic_maths","master","voie","Admission en M1"],["lic_maths","inge","passerelle","Admission sur titre après L2 ou L3"],["lic_maths","ens","passerelle","Concours en 2e année"],["lic_maths","prof","voie","Master MEEF"],
+ ["ats","inge","voie","Concours ATS"],["but_info","inge","passerelle","Admission parallèle, souvent en apprentissage"],["but_info","master","passerelle","Admission en master"],["bts_sio","ats","passerelle","Prépa ATS après le BTS"],
+ ["pass","medecine","voie","Admission en MMOPK"],["pass","master","passerelle","Bascule en L2 de la mineure"],["las","medecine","voie","Admission en MMOPK"],["las","master","voie","Suite de la licence"],["ifsi","infirmier","voie","Diplôme d'État"],
+ ["cpge_ecg","pge","voie","Concours BCE ou Ecricome"],["ecole_com","pge","voie","Programme en 5 ans ou master après le bachelor"],["lic_eco","master","voie","Admission en M1"],["lic_eco","pge","passerelle","Concours AST (Passerelle, Tremplin)"],
+ ["but_tc","pge","passerelle","Admission parallèle après le BUT"],["but_gea","pge","passerelle","Concours AST après le BUT"],["but_gea","dcg","voie","Équivalences vers le DCG"],["bts_cg","dcg","voie","Poursuite en DCG"],["bts_com","pge","passerelle","Bachelor puis admission sur titre"],
+ ["lic_droit","master","voie","Admission en M1 de droit"],["lic_droit","avocat","voie","M1 puis examen du CRFPA"],["lic_droit","scpo","passerelle","Entrée en master Sciences Po"],["iep","scpo","voie","Entrée en master"],["iep","avocat","passerelle","Master de droit puis CRFPA"],
+ ["cpge_lettres","ens","voie","Concours ENS"],["cpge_lettres","scpo","passerelle","Concours d'entrée en IEP ou master"],["cpge_lettres","master","voie","Équivalences en L2 ou L3"],["cpge_lettres","prof","voie","Licence puis MEEF"],
+ ["staps","master","voie","Master STAPS"],["staps","prof","voie","CAPEPS (professeur d'EPS)"],["dnmade","design","voie","DSAA ou master design"]
+];
+const BRIDGES=[
+ {to:"inge",title:"École d'ingénieurs sans classe prépa",routes:[["BUT Informatique","Admission parallèle"],["BTS SIO","Prépa ATS","Concours ATS"]],txt:"Après un BUT, beaucoup d'écoles recrutent sur dossier en 1re année du cycle ingénieur, souvent en apprentissage, donc rémunéré et sans frais. Après un BTS, la prépa ATS dure un an.",dur:"0 à 1 an de plus",from:["but_info","bts_sio"]},
+ {to:"pge",title:"Grande école de commerce sans prépa",routes:[["BUT TC ou GEA, licence éco","Concours AST"]],txt:"Les concours d'admission sur titre permettent d'entrer en 1re ou 2e année de programme grande école après un bac+2 ou un bac+3, pour bien moins cher qu'un parcours complet en école privée.",dur:"Même durée",from:["but_tc","but_gea","lic_eco"]},
+ {to:"medecine",title:"Médecine sans PASS",routes:[["LAS (licence et option santé)","MMOPK"]],txt:"Tu suis une licence qui te plaît avec une option santé. Tu as deux chances de candidater, et si ça ne passe pas, tu continues ta licence sans perdre d'année.",dur:"Même durée, moins de risque",from:["las"]},
+ {to:"scpo",title:"Sciences Po après la fac",routes:[["Licence droit, éco ou lettres","Master Sciences Po"]],txt:"Le bachelor est très sélectif, mais les masters recrutent aussi des diplômés de licence sur dossier et entretien.",dur:"Même durée",from:["lic_droit","cpge_lettres"]},
+ {to:"ens",title:"ENS par l'université",routes:[["Licence de maths","Concours en 2e année"]],txt:"Les ENS recrutent aussi après une L2 ou une L3. Moins connu que la prépa, mais réel.",dur:"Même durée",from:["lic_maths"]},
+ {to:"avocat",title:"Avocat via Sciences Po",routes:[["Sciences Po ou IEP","Master de droit","CRFPA"]],txt:"Pas besoin d'une licence de droit pour devenir avocat : un master de droit à Sciences Po donne accès au CRFPA.",dur:"Même durée",from:["iep"]}
+];
+
+/* Établissements d'exemple (ILLUSTRATIFS), rattachés à une voie */
+const SAMPLE=[
+ {id:"s1",voie:"ecole_com",nom:"Programme post-bac en école de commerce (5 ans)",etab:"École de commerce privée",ville:"Lyon",region:"Auvergne-Rhône-Alpes",taux:35,p:[10,30,35,25],n:420,frais:12500},
+ {id:"s2",voie:"cpge_ecg",nom:"CPGE ECG, maths approfondies",etab:"Lycée public",ville:"Paris",region:"Île-de-France",taux:22,p:[2,13,40,45],n:96,frais:0},
+ {id:"s3",voie:"cpge_ecg",nom:"CPGE ECG, maths appliquées",etab:"Lycée public",ville:"Tours",region:"Centre-Val de Loire",taux:62,p:[8,32,38,22],n:44,frais:0},
+ {id:"s4",voie:"but_tc",nom:"BUT Techniques de commercialisation",etab:"IUT",ville:"Évry",region:"Île-de-France",taux:30,p:[18,42,30,10],n:112,frais:178},
+ {id:"s5",voie:"bts_com",nom:"BTS Négociation et digitalisation de la relation client",etab:"Lycée public",ville:"Corbeil-Essonnes",region:"Île-de-France",taux:48,p:[40,40,15,5],n:35,frais:0},
+ {id:"s6",voie:"lic_eco",nom:"Licence Économie et gestion",etab:"Université",ville:"Paris",region:"Île-de-France",taux:72,p:[30,38,22,10],n:380,frais:178},
+ {id:"s7",voie:"lic_eco",nom:"Double licence Économie et mathématiques",etab:"Université",ville:"Paris",region:"Île-de-France",taux:12,p:[0,8,32,60],n:48,frais:178,spes:["Mathématiques"]},
+ {id:"s8",voie:"bts_cg",nom:"BTS Comptabilité et gestion",etab:"Lycée public",ville:"Évry",region:"Île-de-France",taux:56,p:[45,38,14,3],n:30,frais:0},
+ {id:"s9",voie:"cpge_mp",nom:"CPGE MPSI",etab:"Lycée public",ville:"Paris",region:"Île-de-France",taux:28,p:[1,9,35,55],n:84,frais:0},
+ {id:"s10",voie:"but_info",nom:"BUT Informatique",etab:"IUT",ville:"Orsay",region:"Île-de-France",taux:25,p:[10,35,38,17],n:104,frais:178},
+ {id:"s11",voie:"insa",nom:"École d'ingénieurs post-bac privée",etab:"École privée",ville:"Lille",region:"Hauts-de-France",taux:42,p:[5,25,40,30],n:210,frais:8200},
+ {id:"s12",voie:"pass",nom:"PASS, parcours d'accès spécifique santé",etab:"Université",ville:"Paris",region:"Île-de-France",taux:85,p:[10,25,35,30],n:1500,frais:178},
+ {id:"s13",voie:"las",nom:"Licence Sciences de la vie, option accès santé",etab:"Université",ville:"Évry",region:"Île-de-France",taux:76,p:[15,35,30,20],n:260,frais:178,spes:["SVT"]},
+ {id:"s14",voie:"lic_droit",nom:"Licence Droit",etab:"Université",ville:"Paris",region:"Île-de-France",taux:66,p:[25,38,25,12],n:640,frais:178}
+];
+
+/* Persona d'exemple */
+const DEFAULT_PROFILE={prenom:"Inès",classe:"1re",bac:"G",spes:["Mathématiques","SES","HGGSP"],region:"Île-de-France",mobilite:"parents",budget:"8000",objectif:"pge",
+  coefs:{},
+  historique:[
+    {maths:12.5,francais:12,hg:13,anglais:14,lv2:12,ses:13,ensci:12},
+    {maths:11.5,francais:12.5,hg:13,anglais:14,lv2:12.5,ses:13.5,ensci:11.5},
+    {maths:11,francais:12.5,hg:13.5,anglais:14.5,lv2:12,ses:14,ensci:12},
+    {maths:10,francais:13,hg:13,anglais:14,lv2:12.5,ses:13.5,hggsp:12,ensci:12}],
+  cibles:["v:but_tc","e:s3","e:s2"]};
+
+/* ================= ÉTAT ================= */
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let profile=store.get("orient.profile",null)||structuredClone(DEFAULT_PROFILE);
+let done=store.get("orient.done",{});
+let data={source:"sample",label:"Échantillon d'exemple",rows:SAMPLE.map(r=>({...r,d:VOIES.find(v=>v.id===r.voie).dom}))};
+let ui={tab:"accueil",fiche:null,q:"",doms:[],showPass:true,hideBelow:false,onlySpe:false,sel:null};
+const save=()=>store.set("orient.profile",profile);
+
+/* ================= OUTILS ================= */
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fr=(x,d=1)=>x==null||isNaN(x)?"–":Number(x).toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const eur=x=>x==null?"non renseigné":Math.round(x).toLocaleString("fr-FR")+" €";
+const norm=s=>String(s??"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[’`]/g,"'").toLowerCase().trim();
+const current=()=>profile.historique[profile.historique.length-1];
+const curIdx=()=>profile.historique.length-1;
+function moyenne(notes){let s=0,c=0;for(const[k,v]of Object.entries(notes)){if(typeof v!=="number"||isNaN(v))continue;const w=+(profile.coefs[k]||1);s+=v*w;c+=w}return c?s/c:null}
+/* Moyenne de référence : 1re et Terminale, comme le dossier Parcoursup */
+function refAvg(){const v=profile.historique.slice(3).map(moyenne).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:moyenne(current())}
+const mentionIdx=a=>a>=16?3:a>=14?2:a>=12?1:0;
+const voie=id=>VOIES.find(v=>v.id===id);
+const obj=id=>OBJS.find(o=>o.id===id);
+const etab=id=>data.rows.find(r=>r.id===id);
+
+/* ================= MOTEUR DE POSITIONNEMENT ================= */
+const ZRANK={dessous:0,marge:1,coeur:2};
+const ZLAB={coeur:"Dans le cœur des admis",marge:"À la marge",dessous:"En dessous des admis habituels"};
+const ZSHORT={coeur:"Cœur",marge:"Marge",dessous:"En dessous"};
+const ZCOL={coeur:"var(--good)",marge:"var(--warn)",dessous:"var(--bad)"};
+const CLAB=["","faible","moyenne","bonne"];
+const zoneChip=z=>z?`<span class="chip z-${z}">${ZLAB[z]}</span>`:"";
+function tension(t){if(t==null)return"tension inconnue";if(t<25)return"très sélective";if(t<60)return"sélective";return"accessible"}
+
+/* Statistiques d'une voie : agrégées depuis l'open data importé, sinon valeurs illustratives */
+const statsCache=new Map();
+function voieStats(v){
+  if(statsCache.has(v.id))return statsCache.get(v.id);
+  const rows=data.rows.filter(r=>r.voie===v.id);let st;
+  if(data.source==="open"&&rows.length){let w=0,p=[0,0,0,0],t=0,tw=0,n=0;
+    rows.forEach(r=>{const k=r.n||1;w+=k;r.p.forEach((x,i)=>p[i]+=x*k);if(r.taux!=null){t+=r.taux*k;tw+=k}n+=r.n||0});
+    st={p:p.map(x=>x/w),taux:tw?t/tw:null,n:n||null,count:rows.length,real:true};}
+  else st={p:v.p,taux:v.taux,n:null,count:rows.length,real:false};
+  statsCache.set(v.id,st);return st;
+}
+/* Cible unifiée : une voie (v:) ou un établissement (e:) */
+function target(key){
+  const [k,id]=key.split(":");
+  if(k==="v"){const v=voie(id);if(!v||v.post)return null;const s=voieStats(v);return{key,kind:"voie",id,nom:v.name,d:v.dom,p:s.p,taux:s.taux,n:s.n,spes:v.spes,duree:v.duree,frais:v.frais,ville:null,region:null,real:s.real,count:s.count}}
+  const r=etab(id);if(!r)return null;const v=voie(r.voie);
+  return{key,kind:"etab",id,nom:r.nom,d:r.d,p:r.p,taux:r.taux,n:r.n,spes:r.spes||(v?v.spes:[]),spesHerit:!r.spes&&!!v,duree:r.duree||(v?v.duree:3),frais:r.frais!==undefined?r.frais:(v?v.frais:null),ville:r.ville,region:r.region,etab:r.etab,real:data.source==="open",voie:r.voie,alternance:r.alternance??v?.alternance,lien:r.lien};
+}
+function positionner(f,avg=refAvg()){
+  const m=mentionIdx(avg);
+  const share=avg<10?0:f.p.slice(0,m+1).reduce((a,b)=>a+b,0);
+  let zone=share>=40?"coeur":share>=12?"marge":"dessous";
+  const manque=profile.bac==="G"?(f.spes||[]).filter(s=>!profile.spes.includes(s)):[];
+  if(manque.length&&profile.classe!=="2nde")zone=zone==="coeur"?"marge":"dessous";
+  let conf=3;const raisons=[];
+  if(!f.real){conf=1;raisons.push("valeurs d'exemple")}
+  else{if(f.n!=null&&f.n<50){conf--;raisons.push(`peu d'admis (${fr(f.n,0)})`)}if(f.n==null){conf--;raisons.push("effectif d'admis inconnu")}if(f.spesHerit){conf--;raisons.push("spécialités attendues déduites de la voie")}}
+  return{m,share,zone,manque,conf:Math.max(1,conf),raisons};
+}
+function message(pos){const mm=MENTIONS[pos.m].toLowerCase();
+  if(pos.zone==="coeur")return`Ton niveau (équivalent ${mm}) correspond à celui d'une bonne partie des admis : ${fr(pos.share,0)} % d'entre eux avaient ce niveau ou moins.`;
+  if(pos.zone==="marge")return`Une partie des admis avait ton niveau (${fr(pos.share,0)} % avec ${mm} ou moins), mais la plupart avaient une mention plus élevée.`;
+  return`Très peu d'admis avaient ton niveau actuel (${fr(pos.share,0)} % avec ${mm} ou moins). Le plan d'action te dit ce qui ferait la différence.`}
+const bacOk=v=>v.post||(v.bac[profile.bac]??0)>=.08;
+/* Zone d'une voie ; une voie « après BTS/BUT » prend la meilleure zone de ses voies d'entrée */
+function zoneVoie(v){
+  if(!v.post){const t=target("v:"+v.id);return bacOk(v)?positionner(t).zone:null}
+  const ins=EDGES.filter(e=>e[1]===v.id).map(e=>voie(e[0])).filter(x=>x&&bacOk(x)).map(zoneVoie).filter(Boolean);
+  return ins.length?ins.sort((a,b)=>ZRANK[b]-ZRANK[a])[0]:null;
+}
+/* Routes vers un objectif, triées de la plus accessible à la moins accessible */
+function routes(oid){
+  return EDGES.filter(e=>e[1]===oid).map(e=>({v:voie(e[0]),kind:e[2],txt:e[3]})).filter(r=>r.v&&bacOk(r.v)).map(r=>({...r,z:zoneVoie(r.v)})).filter(r=>r.z)
+    .map(r=>({...r,cost:cout(target("v:"+r.v.id)||{frais:r.v.frais,duree:r.v.duree}).total}))
+    .sort((a,b)=>ZRANK[b.z]-ZRANK[a.z]||(a.v.post?1:0)-(b.v.post?1:0)||(a.kind===b.kind?a.cost-b.cost:(a.kind==="voie"?-1:1)));
+}
+
+/* ================= COÛT ================= */
+function cout(f){
+  const chezParents=profile.mobilite==="parents"&&(!f.region||f.region===profile.region);
+  const vie=chezParents?150:(f.ville==="Paris"?1150:800);
+  return{vie,chezParents,frais:f.frais,total:(f.frais??0)*f.duree+vie*10*f.duree,partiel:f.frais==null};
+}
+
+/* ================= PLAN D'ACTION ================= */
+function plan(f){
+  const notes=current(),avg=refAvg(),pos=positionner(f,avg);
+  let target=3,cum=0;for(let i=0;i<4;i++){cum+=f.p[i];if(cum>=40){target=i;break}}
+  const seuil=Math.max(SEUILS[target],10),gap=Math.max(0,seuil-avg);
+  const keys=(KEYSUBJ[f.d]||KEYSUBJ.autre).filter(k=>notes[k]!=null).sort((a,b)=>notes[a]-notes[b]);
+  const objs=[];
+  if(keys.length){const k=keys[0],v=notes[k],to=Math.min(20,Math.round((v+(gap>0?2:1))*2)/2);
+    const tot=Object.entries(notes).filter(([,x])=>typeof x==="number").reduce((a,[s])=>a+(+(profile.coefs[s]||1)),0);
+    objs.push({id:`${f.key}-${k}`,t:`${SUBJECTS[k]} : passer de ${fr(v)} à ${fr(to)} au prochain trimestre`,d:`C'est ta note la plus basse parmi les matières qui comptent dans ce domaine. Effet sur ta moyenne du trimestre : +${fr((to-v)*(+(profile.coefs[k]||1))/tot,2)} point.`})}
+  if(gap>0)objs.push({id:`${f.key}-moy`,t:`Moyenne de référence : viser ${fr(avg+gap/2)} puis ${fr(seuil)}`,d:`À ${fr(seuil)} (équivalent ${MENTIONS[target].toLowerCase()}), tu rejoins le profil d'au moins 40 % des admis. Écart actuel : ${fr(gap)} point.`});
+  else objs.push({id:`${f.key}-keep`,t:`Moyenne de référence : rester au-dessus de ${fr(seuil)}`,d:"Tu as déjà le niveau d'une bonne partie des admis. L'enjeu est de le tenir jusqu'au dossier Parcoursup."});
+  if(profile.bac==="G")(f.spes||[]).forEach(s=>{
+    if(!profile.spes.includes(s))objs.push({id:`${f.key}-spe-${s}`,t:`Spécialité ${s} attendue`,d:`Cette formation recrute surtout des élèves qui ont suivi ${s}. Parles-en à ton professeur principal avant le choix des spécialités.`});
+    else if(profile.classe==="1re")objs.push({id:`${f.key}-garde-${s}`,t:`Garde ${s} en Terminale`,d:"Si tu l'abandonnes en fin de 1re, cette formation devient difficile d'accès. Décision à prendre avant le conseil de classe du 2e trimestre."});
+  });
+  return{pos,objs,seuil,gap,avg};
+}
+const ECHEANCES={
+  "2nde":["Mars – avril : choix des 3 spécialités de 1re (conseil de classe du 2e trimestre)","Janvier – mars : journées portes ouvertes des lycées et du supérieur","Juin : stage d'observation (si proposé)"],
+  "1re":["Février – mars : choix de la spécialité abandonnée en Terminale","Janvier – mars : journées portes ouvertes du supérieur","Juin : épreuve anticipée de français"],
+  "Terminale":["Mi-janvier : ouverture de la saisie des vœux sur Parcoursup","Mi-mars : date limite pour formuler les vœux","Début avril : date limite pour finaliser les dossiers","Début juin : premières réponses des formations"]};
+
+/* ================= IMPORT OPEN DATA ================= */
+function parseCSV(text){
+  text=text.replace(/^﻿/,"");
+  const first=text.slice(0,text.indexOf("\n"));const delim=first.split(";").length>=first.split(",").length?";":",";
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===delim){row.push(f);f=""}else if(c==="\n"){row.push(f);rows.push(row);row=[];f=""}else if(c!=="\r")f+=c}
+  if(f||row.length){row.push(f);rows.push(row)}
+  const head=rows.shift();return rows.filter(r=>r.length>1).map(r=>Object.fromEntries(head.map((h,i)=>[h,r[i]])));
+}
+function findCol(cols,tech,test){const n=cols.map(c=>[c,norm(c)]);const t=n.find(([,x])=>tech.includes(x));if(t)return t[0];const l=n.find(([,x])=>test(x));return l?l[0]:null}
+function mapRecords(recs){
+  const cols=Object.keys(recs[0]||{});
+  const C={
+    nom:findCol(cols,["lib_for_voe_ins"],x=>x.includes("tres detaillee"))||findCol(cols,["form_lib_voe_acc"],x=>x.includes("filiere de formation detaillee")),
+    etab:findCol(cols,["g_ea_lib_vx"],x=>x==="etablissement"),
+    ville:findCol(cols,["ville_etab"],x=>x.startsWith("commune de")),
+    region:findCol(cols,["region_etab_aff"],x=>x.startsWith("region de")),
+    fili:findCol(cols,["fili"],x=>x==="filiere de formation"||x.includes("tres agregee")),
+    statut:findCol(cols,["contrat_etab"],x=>x.startsWith("statut")),
+    taux:findCol(cols,["taux_acces_ens"],x=>x.includes("taux")&&x.includes("acces")),
+    p0:findCol(cols,["pct_sansmention"],x=>x.includes("sans mention")&&x.includes("%")),
+    p1:findCol(cols,["pct_ab"],x=>x.includes("assez bien")),
+    p2:findCol(cols,["pct_b"],x=>x.includes("mention bien")&&!x.includes("assez")&&!x.includes("tres")),
+    p3:findCol(cols,["pct_tb"],x=>x.includes("tres bien")&&!x.includes("felicitation")),
+    p4:findCol(cols,["pct_tbf"],x=>x.includes("felicitation")),
+    n:findCol(cols,["acc_neobac"],x=>x.includes("admis")&&x.includes("neo bachelier")&&x.includes("effectif")&&!/generaux|techno|pro|mention|boursier/.test(x))||findCol(cols,["acc_tot"],()=>false),
+    session:findCol(cols,["session"],x=>x==="session"),
+    lien:findCol(cols,["lien_form_psup"],x=>x.includes("lien"))
+  };
+  const miss=["nom","taux","p0","p1","p2","p3"].filter(k=>!C[k]);
+  if(miss.length)throw new Error(`Colonnes introuvables : ${miss.join(", ")}. Vérifie qu'il s'agit du fichier « Parcoursup – vœux de poursuite d'études » (fr-esr-parcoursup).`);
+  const num=v=>{if(v==null||v==="")return null;const x=parseFloat(String(v).replace(",","."));return isNaN(x)?null:x};
+  const domOf=s=>/\bpass\b|\blas\b|sante|medecine|infirm|kine|pharma|maieut|orthophon/.test(s)?"sante":/informatique|numerique|\bsio\b|reseaux/.test(s)?"num":/ingenieur|mpsi|pcsi|ptsi|mp2i|\btsi\b|mathemat|physique|genie|mecanique|electr|chimie/.test(s)?"sci":/commerc|ecg|management|marketing|gestion|compta|econom|\baes\b|finance|negociation/.test(s)?"eco":/droit|juridique|politique/.test(s)?"droit":/staps|sport/.test(s)?"sport":/design|\bart|musique|cinema|dn made/.test(s)?"arts":/lettres|langues|histoire|philo|psycho|sociolog|geograph|lea\b|llcer/.test(s)?"lettres":"autre";
+  let session=null;
+  const out=recs.map((r,i)=>{
+    const p=[num(r[C.p0]),num(r[C.p1]),num(r[C.p2]),(num(r[C.p3])||0)+(num(r[C.p4])||0)];
+    if(p.slice(0,3).some(x=>x==null))return null;
+    const tot=p.reduce((a,b)=>a+b,0);if(!tot)return null;
+    const nom=r[C.nom];if(!nom)return null;
+    if(C.session&&!session)session=r[C.session];
+    const s=norm((C.fili?r[C.fili]:"")+" "+nom);
+    const v=VOIES.find(v=>v.rx.test(s));
+    const prive=C.statut?norm(r[C.statut]).includes("prive"):false;
+    const fr0=v?v.frais:178;
+    return{id:"o"+i,voie:v?v.id:null,d:v?v.dom:domOf(s),nom,etab:C.etab?r[C.etab]:"",ville:C.ville?r[C.ville]:"",region:C.region?r[C.region]:"",
+      taux:num(r[C.taux]),p:p.map(x=>x*100/tot),n:C.n?num(r[C.n]):null,frais:prive&&(!v||!v.prive)?null:fr0,lien:C.lien?r[C.lien]:null,type:C.fili?r[C.fili]:""};
+  }).filter(Boolean);
+  return{rows:out,session};
+}
+function loadFile(file){
+  const msg=document.getElementById("importmsg");msg.textContent="Lecture du fichier…";
+  const rd=new FileReader();
+  rd.onload=()=>{try{
+    const txt=rd.result;let recs;
+    if(/^\s*[\[{]/.test(txt)){const j=JSON.parse(txt);recs=Array.isArray(j)?j:(j.results||j.records||[]);recs=recs.map(r=>r.fields||r)}else recs=parseCSV(txt);
+    if(!recs.length)throw new Error("Le fichier ne contient aucune ligne.");
+    const {rows,session}=mapRecords(recs);
+    if(!rows.length)throw new Error("Aucune formation exploitable (taux d'accès ou mentions manquants).");
+    data={source:"open",label:`Open data Parcoursup${session?`, session ${session}`:""}`,rows,file:file.name};
+    statsCache.clear();profile.cibles=profile.cibles.filter(c=>c.startsWith("v:"));save();ui.tab="voies";ui.fiche=null;render();
+  }catch(e){msg.textContent=e.message}};
+  rd.onerror=()=>{msg.textContent="Impossible de lire ce fichier."};
+  rd.readAsText(file,"utf-8");
+}
+
+
+/* ================= DONNÉES DU SERVEUR (API Python) ================= */
+async function loadServer(manual){
+  const msg=document.getElementById("importmsg");
+  try{
+    if(msg)msg.textContent="Chargement des données du serveur…";
+    const r=await fetch("/api/raw.csv");
+    if(!r.ok)throw new Error(r.status===404?"Le serveur n'a pas encore téléchargé les données (lance : python data.py).":"Erreur serveur "+r.status);
+    const recs=parseCSV(await r.text());
+    if(!recs.length)throw new Error("Données serveur vides.");
+    const {rows,session}=mapRecords(recs);
+    if(!rows.length)throw new Error("Aucune formation exploitable dans les données du serveur.");
+    data={source:"open",label:`Parcoursup (serveur)${session?`, session ${session}`:""}`,rows,file:"serveur"};
+    statsCache.clear();profile.cibles=profile.cibles.filter(c=>c.startsWith("v:"));save();
+    if(manual){ui.tab="voies";ui.fiche=null}render();
+  }catch(e){if(msg&&manual)msg.textContent=e.message}
+}
+
+/* ================= VUES ================= */
+const TABS=[["accueil","Accueil"],["voies","Carte des voies"],["explorer","Établissements"],["plan","Mon plan"],["suivi","Suivi"],["profil","Mon profil"],["donnees","Données"]];
+function renderTabs(){document.getElementById("tabs").innerHTML=TABS.map(([k,l])=>`<button data-tab="${k}" ${ui.tab===k&&!ui.fiche?'aria-current="page"':""}>${l}</button>`).join("")}
+function renderNotice(){const n=document.getElementById("notice");n.className="notice"+(data.source==="open"?" real":"");
+  n.innerHTML=data.source==="open"?`<div><strong>Données réelles</strong><span>${esc(data.label)} · ${data.rows.length.toLocaleString("fr-FR")} formations importées. Coûts des écoles privées, salaires et spécialités attendues : hypothèses à compléter.</span></div>`
+  :`<div><strong>Données d'exemple</strong><span>Les chiffres des formations sont illustratifs. Importe l'open data Parcoursup dans l'onglet Données pour travailler sur les vrais chiffres.</span></div>`}
+function srcLine(f){
+  if(f.kind==="voie")return f.real?`Source : ${esc(data.label)}, moyenne pondérée de ${f.count} formations${f.n?` · ${fr(f.n,0)} admis néo-bacheliers`:""}`:"Source : valeurs illustratives de la voie (importe l'open data pour les remplacer)";
+  return f.real?`Source : ${esc(data.label)}${f.n!=null?` · ${fr(f.n,0)} admis néo-bacheliers`:""}`:`Source : échantillon illustratif${f.n?` · ${f.n} admis (fictif)`:""}`}
+const targetRow=(f,extra="")=>{const p=positionner(f),k=cout(f);return`<button class="frow" data-open="${f.key}"><div><div class="t">${esc(f.nom)}</div><div class="meta">${f.kind==="voie"?"Voie · ":esc(f.ville||"")+" · "}${f.duree} an${f.duree>1?"s":""} · ${k.partiel?"frais non renseignés":"coût estimé "+eur(k.total)}${extra}</div></div><div class="right">${zoneChip(p.zone)}</div></button>`};
+
+function vAccueil(){
+  const c=current(),avg=moyenne(c),ref=refAvg(),m=mentionIdx(ref);
+  const cibles=profile.cibles.map(target).filter(Boolean);
+  const o=obj(profile.objectif),rs=routes(o.id),best=rs[0];
+  const first=cibles[0]?plan(cibles[0]):best?plan(target("v:"+best.v.id)):null;
+  return`<div class="grid2">
+   <section class="card">
+     <div class="spread"><h2>${esc(profile.prenom)}</h2><span class="chip out">profil d'exemple</span></div>
+     <p class="muted">${esc(profile.classe)} · voie ${esc(BACLBL[profile.bac].toLowerCase())} · ${esc(profile.region)}</p>
+     ${profile.bac==="G"?`<div class="row">${profile.spes.map(s=>`<span class="chip">${esc(s)}</span>`).join("")}</div>`:""}
+     <div class="spread"><div><div class="label">Moyenne de référence</div><div class="big">${fr(ref,2)}<span class="muted small"> /20</span></div></div>
+     <div><div class="label">${esc(TRIM[curIdx()])}</div><div class="t num">${fr(avg,2)}</div></div>
+     <div><div class="label">Équivalent au bac</div><div class="t">${MENTIONS[m]}</div></div></div>
+     <p class="small muted">La moyenne de référence reprend la 1re et la Terminale, comme le dossier Parcoursup. La mention réelle dépendra aussi des épreuves du bac.</p>
+     <div class="row"><button class="btn" data-tab="profil">Mettre à jour mes notes</button><button class="btn link" data-tab="suivi">Voir mon suivi</button></div>
+   </section>
+   <section class="card">
+     <div class="label">Mon objectif</div>
+     <div class="field"><label for="objectif">Je vise</label><select id="objectif">${OBJS.map(x=>`<option value="${x.id}" ${x.id===o.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select></div>
+     ${best?`<div class="spread"><p>Route la plus accessible pour toi : <strong>${esc(best.v.name)}</strong>${best.kind==="passerelle"?' <span class="chip pass">passerelle</span>':""}</p>${zoneChip(best.z)}</div>
+       <p class="small muted">${rs.length} route${rs.length>1?"s":""} possible${rs.length>1?"s":""} depuis ton profil. <button class="btn link" data-open="o:${o.id}">Comparer les routes</button></p>`
+      :`<p class="muted">Aucune route ouverte avec ta voie de bac. Change d'objectif ou consulte les passerelles.</p>`}
+   </section></div>
+   <div class="grid2 even">
+   <section class="card">
+     <div class="spread"><h2>Mes cibles</h2><button class="btn link" data-tab="voies">Ajouter depuis la carte</button></div>
+     ${cibles.length?`<div class="stack" style="gap:2px">${cibles.map(f=>targetRow(f)).join("")}</div>`:`<p class="muted">Aucune cible. Ajoute jusqu'à 3 voies ou établissements : une ambitieuse, une réaliste, une sûre.</p>`}
+   </section>
+   <section class="card">
+     <h2>Prochain objectif</h2>
+     ${first?`<div><div class="t">${esc(first.objs[0].t)}</div><div class="small muted">${esc(first.objs[0].d)}</div></div><div><button class="btn primary" data-tab="plan">Voir mon plan complet</button></div>`:`<p class="muted">Choisis un objectif ou une cible pour obtenir un plan.</p>`}
+   </section></div>`;
+}
+
+/* ----- Carte des voies (graphe bac → voies → objectifs) ----- */
+function visibleGraph(){
+  let vs=VOIES.filter(v=>{
+    if(ui.doms.length&&!ui.doms.includes(v.dom))return false;
+    if(v.post)return ui.showPass;
+    if(!bacOk(v))return false;
+    if(ui.hideBelow&&zoneVoie(v)==="dessous")return false;
+    if(ui.onlySpe&&profile.bac==="G"&&(v.spes.length||v.plus.length)&&![...v.spes,...v.plus].some(s=>profile.spes.includes(s)))return false;
+    return true});
+  const ids=new Set(vs.map(v=>v.id));
+  vs=vs.filter(v=>!v.post||EDGES.some(e=>e[1]===v.id&&ids.has(e[0])));
+  ids.clear();vs.forEach(v=>ids.add(v.id));
+  const edges=EDGES.filter(e=>ids.has(e[0])&&(ui.showPass||e[2]!=="passerelle")&&(ids.has(e[1])||obj(e[1])));
+  const os=OBJS.filter(o=>edges.some(e=>e[1]===o.id));
+  return{vs,os,edges};
+}
+function graphSVG(){
+  const{vs,os,edges}=visibleGraph();const order=Object.keys(DOMS);
+  vs.sort((a,b)=>order.indexOf(a.dom)-order.indexOf(b.dom)||(a.post?1:0)-(b.post?1:0));
+  const RH=48,TOP=52,W=940,n=Math.max(vs.length,os.length,1),H=TOP+n*RH+16,pos={};
+  vs.forEach((v,i)=>pos[v.id]={x:236,y:TOP+i*RH,w:300});
+  const bary=os.map(o=>{const ys=edges.filter(e=>e[1]===o.id&&pos[e[0]]).map(e=>pos[e[0]].y);return{o,y:ys.reduce((a,b)=>a+b,0)/ys.length}}).sort((a,b)=>a.y-b.y);
+  const gapO=os.length?n*RH/os.length:RH;
+  bary.forEach((b,i)=>pos[b.o.id]={x:660,y:TOP+i*gapO+(gapO-RH)/2,w:264});
+  pos.bac={x:16,y:TOP+n*RH/2-RH/2,w:176};
+  const sel=ui.sel,hi=new Set();
+  if(sel){hi.add(sel);edges.forEach(e=>{if(e[0]===sel||e[1]===sel){hi.add(e[0]);hi.add(e[1])}});
+    if(voie(sel)&&!voie(sel).post)hi.add("bac");
+    EDGES.forEach(e=>{if(e[1]===sel&&voie(e[0])?.post)edges.forEach(e2=>{if(e2[1]===e[0])hi.add(e2[0])})});}
+  const curve=(a,b)=>{const x1=a.x+a.w,y1=a.y+19,x2=b.x,y2=b.y+19,mx=(x1+x2)/2;return`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`};
+  let h=`<text class="colhead" x="16" y="28">TON BAC</text><text class="colhead" x="236" y="28">APRÈS LE BAC · ${vs.length} VOIES</text><text class="colhead" x="660" y="28">OBJECTIFS BAC+3 À BAC+8</text>`;
+  vs.filter(v=>!v.post).forEach(v=>{const on=!sel||(hi.has(v.id)&&hi.has("bac"));h+=`<path class="edge ${sel&&on?"hi":""} ${on?"":"dim"}" d="${curve(pos.bac,pos[v.id])}"/>`});
+  edges.forEach(e=>{const a=pos[e[0]],b=pos[e[1]];if(!a||!b)return;
+    const d=voie(e[1])?(()=>{const x=a.x+a.w,y1=a.y+19,y2=b.y+19;return`M${x},${y1} C${x+70},${y1} ${x+70},${y2} ${x},${y2}`})():curve(a,b);
+    const on=!sel||(hi.has(e[0])&&hi.has(e[1]));
+    h+=`<path class="edge ${e[2]==="passerelle"?"pass":""} ${sel&&on?"hi":""} ${on?"":"dim"}" d="${d}"><title>${esc((voie(e[0])||{}).name)} → ${esc((voie(e[1])||obj(e[1])).name)} : ${esc(e[3])}</title></path>`});
+  const node=(id,key,name,sub,z,goal)=>{const q=pos[id],on=!sel||hi.has(id);
+    return`<g class="gnode ${sel===id?"sel":""} ${goal?"goal":""} ${on?"":"dim"}" data-node="${key}" data-sel="${id}" tabindex="0" role="button" aria-label="${esc(name)}${z?", "+ZLAB[z]:""}">
+      <rect class="box" x="${q.x}" y="${q.y}" width="${q.w}" height="38" rx="8"/>
+      <text x="${q.x+12}" y="${q.y+16}">${esc(name.length>34?name.slice(0,33)+"…":name)}</text>
+      <text class="sub" x="${q.x+12}" y="${q.y+30}">${esc(sub)}</text>
+      ${z?`<circle cx="${q.x+q.w-16}" cy="${q.y+19}" r="6" fill="${ZCOL[z]}"/>`:""}</g>`};
+  const b=pos.bac;
+  h+=`<g><rect x="${b.x}" y="${b.y}" width="${b.w}" height="38" rx="8" fill="var(--accent)"/><text x="${b.x+12}" y="${b.y+16}" fill="var(--accent-ink)" font-weight="700" font-size="12.5" font-family="Source Sans 3, sans-serif">Bac ${esc(BACLBL[profile.bac].toLowerCase())}</text><text x="${b.x+12}" y="${b.y+30}" fill="var(--accent-ink)" font-size="10.5" font-family="IBM Plex Mono, monospace">réf. ${fr(refAvg())}</text></g>`;
+  vs.forEach(v=>{const s=voieStats(v);h+=node(v.id,"v:"+v.id,v.name,(v.post?"Après BTS ou BUT · ":"")+v.type+(s.taux!=null&&!v.post?` · accès ${fr(s.taux,0)} %`:""),zoneVoie(v),false)});
+  os.forEach(o=>{const r=routes(o.id)[0];h+=node(o.id,"o:"+o.id,o.name,o.duree,r?r.z:null,o.id===profile.objectif)});
+  if(!vs.length)h+=`<text x="236" y="90" fill="var(--muted)" font-size="14">Aucune voie ne correspond à ces filtres.</text>`;
+  return`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Carte des voies après le bac">${h}</svg>`;
+}
+function vVoies(){
+  return`<section class="card">
+    <div class="spread"><div><h2>Toutes les voies, jusqu'au métier</h2><p class="lead small">Lis de gauche à droite : ton bac, les formations après le bac, puis les objectifs. Les pointillés sont des passerelles. Clique sur une voie pour voir où tu te situes.</p></div><button class="btn" data-reset-filters="1">Tout afficher</button></div>
+    <div class="fline"><span class="label">Domaine</span><div class="seg" role="group" aria-label="Domaines">${Object.entries(DOMS).filter(([k])=>k!=="autre").map(([k,l])=>`<button data-dom="${k}" aria-pressed="${ui.doms.includes(k)}">${l}</button>`).join("")}</div></div>
+    <div class="fline"><span class="label">Options</span><div class="seg"><button data-toggle="showPass" aria-pressed="${ui.showPass}">Passerelles</button><button data-toggle="hideBelow" aria-pressed="${ui.hideBelow}">Masquer « en dessous »</button>${profile.bac==="G"?`<button data-toggle="onlySpe" aria-pressed="${ui.onlySpe}">Liées à mes spécialités</button>`:""}</div></div>
+    <div class="graphbox">${graphSVG()}</div>
+    <div class="legend"><span><i></i>Voie classique</span><span><i class="pass"></i>Passerelle</span><span><b style="background:var(--good)"></b>Cœur des admis</span><span><b style="background:var(--warn)"></b>À la marge</span><span><b style="background:var(--bad)"></b>En dessous</span></div>
+  </section>
+  <section class="stack"><div><span class="label">Plan B, mais pas moins bien</span><h2>Passerelles vers les voies sélectives</h2></div>
+    <div class="bridges">${BRIDGES.map((b,i)=>{const zs=b.from.map(id=>voie(id)).filter(bacOk).map(zoneVoie).filter(Boolean).sort((x,y)=>ZRANK[y]-ZRANK[x]);
+      return`<article class="bridge"><span class="label">${esc(DOMS[obj(b.to).dom])}</span><h3>${esc(b.title)}</h3>${b.routes.map(r=>`<div class="route">${r.map(s=>`<span>${esc(s)}</span>`).join("<em>→</em>")}<em>→</em><span>${esc(obj(b.to).name)}</span></div>`).join("")}
+      <p class="small grow">${esc(b.txt)}</p><div class="row">${zs[0]?`<span class="small muted">Pour toi :</span>${zoneChip(zs[0])}`:`<span class="small muted">Non ouverte avec ta voie de bac</span>`}<span class="chip out">${esc(b.dur)}</span></div>
+      <div><button class="btn" data-bridge="${b.to}">Voir sur la carte</button></div></article>`}).join("")}</div>
+    <p class="small muted">Les conditions d'accès des passerelles (concours AST, admissions parallèles, ATS) restent à documenter avec les sources Onisep et les sites des écoles.</p>
+  </section>`;
+}
+
+/* ----- Établissements : hiérarchie domaine › voie › établissement ----- */
+function vExplorer(){
+  const q=norm(ui.q),LIM=60;
+  const rows=data.rows.filter(r=>!q||norm(r.nom+" "+r.etab+" "+r.ville).includes(q));
+  const byDom={};rows.forEach(r=>{((byDom[r.d]??={})[r.voie||"_"]??=[]).push(r)});
+  const order=Object.keys(DOMS);
+  const doms=order.filter(d=>byDom[d]||VOIES.some(v=>v.dom===d&&!q));
+  return`<section class="card"><h2>Établissements</h2>
+    <p class="lead small">Descends du domaine à la voie, puis aux établissements. ${data.source==="open"?"Les formations de l'open data sont rattachées aux voies par leur intitulé ; les autres sont regroupées sous « Autres formations ».":"Avec l'échantillon d'exemple, seules quelques voies ont des établissements."}</p>
+    <div class="field"><label for="q">Rechercher un établissement, une ville, une formation</label><input id="q" type="search" placeholder="Évry, BUT, prépa…" value="${esc(ui.q)}"></div>
+    <div>${doms.map(d=>{const groups=byDom[d]||{};const total=Object.values(groups).flat().length;
+      const vids=[...VOIES.filter(v=>v.dom===d&&!v.post&&bacOk(v)&&(groups[v.id]||!q)).map(v=>v.id),...(groups._?["_"]:[])];
+      if(!vids.length)return"";
+      return`<details class="dom" ${q||d==="eco"?"open":""}><summary><span class="t">${DOMS[d]}</span><span class="count">${total} établissement${total>1?"s":""}</span></summary>
+      ${vids.map(vid=>{const list=(groups[vid]||[]),v=voie(vid);const z=v?zoneVoie(v):null;
+        return`<details class="voie" ${q&&list.length?"open":""}><summary><span class="t">${v?esc(v.name):"Autres formations"}</span><span class="count">${list.length}</span>${z?zoneChip(z):""}${v?`<button class="btn link small" data-open="v:${v.id}">fiche de la voie</button>`:""}</summary>
+        <div class="etabs">${list.length?list.slice(0,LIM).map(r=>targetRow(target("e:"+r.id))).join("")+(list.length>LIM?`<p class="small muted">${LIM} affichés sur ${list.length}. Affine la recherche.</p>`:""):`<p class="small muted">Pas d'établissement dans l'échantillon. Importe l'open data pour voir la liste.</p>`}</div></details>`}).join("")}</details>`}).join("")}</div>
+  </section>`;
+}
+
+/* ----- Fiches ----- */
+function histo(f,pos){const max=Math.max(...f.p),me=refAvg()>=10;
+  return`<div><div class="label">Mention au bac des admis néo-bacheliers</div>
+  <div class="hist" role="img" aria-label="Répartition des admis par mention">${f.p.map((v,i)=>`<div class="hcol ${i===pos.m&&me?"me":""}"><span class="v">${fr(v,0)} %</span><div class="hbar" style="height:${max?v/max*118:0}px"></div></div>`).join("")}</div>
+  <div class="hlab">${MENTIONS.map((l,i)=>`<span class="${i===pos.m&&me?"me":""}">${l}${i===pos.m&&me?"<br>toi":""}</span>`).join("")}</div></div>`}
+const unknowns=`<div class="stack"><div class="label">Ce que l'app ne sait pas</div><ul class="clean small"><li>les appréciations de tes professeurs et ta fiche Avenir</li><li>ton projet de formation motivé</li><li>les critères propres à chaque commission</li><li>ta mention réelle, qui dépend aussi des épreuves du bac</li></ul></div>`;
+function cibleBtn(key){const on=profile.cibles.includes(key);return`<button class="btn ${on?"":"primary"}" data-cible="${key}">${on?"Retirer de mes cibles":"Ajouter à mes cibles"}</button>`}
+function coutCard(f){const k=cout(f);const over=profile.budget!=="0"&&f.frais!=null&&f.frais>+profile.budget;
+  return`<section class="card"><h2>Ce que ça coûte</h2>
+   <div><div class="label">Coût total estimé sur ${f.duree} an${f.duree>1?"s":""}</div><div class="big">${eur(k.total)}</div></div>
+   <div class="tablewrap"><table><tbody><tr><td>Frais de scolarité</td><td class="n">${k.frais==null?"non renseigné":eur(k.frais)+" / an"}</td></tr>
+   <tr><td>Coût de la vie ${k.chezParents?"(chez tes parents : transport, repas)":`(logement et vie${f.ville?" à "+esc(f.ville):""})`}</td><td class="n">${eur(k.vie)} / mois</td></tr></tbody></table></div>
+   ${over?`<div class="alert">Les frais dépassent le budget annuel de ton profil (${eur(+profile.budget)}).</div>`:""}
+   ${k.partiel?`<div class="alert">Frais non disponibles dans l'open data pour cet établissement privé : à collecter sur son site.</div>`:""}
+   <p class="small muted">Hypothèses : droits d'inscription publics à 178 €/an, 1 150 €/mois à Paris et 800 €/mois ailleurs sur 10 mois. Bourses et aides au logement non déduites.</p></section>`}
+function linkRows(list){return`<div class="stack" style="gap:2px">${list.map(x=>`<button class="frow" data-open="${x.key}"><div><div class="t">${esc(x.name)}</div><div class="meta">${x.kind==="passerelle"?'<span class="chip pass">passerelle</span> ':""}${esc(x.txt)}</div></div><div class="right">${zoneChip(x.z)}</div></button>`).join("")}</div>`}
+
+function vFicheVoie(id){
+  const v=voie(id),st=voieStats(v);
+  const outs=EDGES.filter(e=>e[0]===id).map(e=>({key:(voie(e[1])?"v:":"o:")+e[1],name:(voie(e[1])||obj(e[1])).name,kind:e[2],txt:e[3],z:voie(e[1])?zoneVoie(voie(e[1])):(routes(e[1])[0]||{}).z}));
+  const ins=EDGES.filter(e=>e[1]===id).map(e=>({key:"v:"+e[0],name:voie(e[0]).name,kind:e[2],txt:e[3],z:zoneVoie(voie(e[0]))}));
+  const head=`<div><button class="btn link" data-back="1">← Retour</button></div><section class="card"><div class="spread"><div class="stack" style="gap:4px"><span class="label">${esc(DOMS[v.dom])} · ${esc(v.type)}</span><h1>${esc(v.name)}</h1></div>${v.post?"":cibleBtn("v:"+id)}</div>
+    <p>${esc(v.desc)}</p><dl class="kv"><dt>Taux d'accès</dt><dd>${st.taux!=null?`<span class="num">${fr(st.taux,0)} %</span> · ${tension(st.taux)}`:"sans objet"}</dd><dt>Durée</dt><dd>${v.duree} an${v.duree>1?"s":""}</dd><dt>Alternance</dt><dd>${v.alternance?"possible":"rare ou impossible"}</dd>
+    ${profile.bac==="G"&&(v.spes.length||v.plus.length)?`<dt>Spécialités</dt><dd>${v.spes.length?`attendues : <strong>${v.spes.map(esc).join(", ")}</strong>`:""}${v.spes.length&&v.plus.length?" · ":""}${v.plus.length?`appréciées : ${v.plus.map(esc).join(", ")}`:""}</dd>`:""}
+    <dt>Débouchés</dt><dd>${v.deb.map(esc).join(" · ")}</dd></dl></section>`;
+  if(v.post)return head+`<section class="card"><h2>Comment y arriver</h2>${linkRows(ins)}</section><section class="card"><h2>Et après ?</h2>${linkRows(outs)}</section>`;
+  const f=target("v:"+id),pos=positionner(f),pl=plan(f);
+  const list=data.rows.filter(r=>r.voie===id).map(r=>target("e:"+r.id)).sort((a,b)=>ZRANK[positionner(b).zone]-ZRANK[positionner(a).zone]).slice(0,12);
+  return head+`<div class="grid2 even"><section class="card"><div class="spread"><h2>Où tu te situes</h2>${zoneChip(pos.zone)}</div><p>${message(pos)}</p>${histo(f,pos)}
+    ${pos.manque.length?`<div class="alert bad">Spécialité attendue absente de ton profil : ${pos.manque.map(esc).join(", ")}. Ton positionnement est abaissé d'un niveau.</div>`:""}
+    <p class="small"><strong>Confiance : ${CLAB[pos.conf]}</strong>${pos.raisons.length?` (${pos.raisons.join(", ")})`:""}.</p><p class="small muted">${srcLine(f)}</p>${unknowns}</section>
+    ${coutCard(f)}</div>
+    <div class="grid2 even"><section class="card"><h2>Et après ?</h2>${linkRows(outs)}</section>
+    <section class="card"><h2>Pour augmenter tes chances</h2><div>${pl.objs.map(o=>`<div class="obj"><span></span><div><div class="t">${esc(o.t)}</div><div class="small muted">${esc(o.d)}</div></div></div>`).join("")}</div></section></div>
+    <section class="card"><h2>Établissements de cette voie</h2>${list.length?`<div class="stack" style="gap:2px">${list.map(x=>targetRow(x)).join("")}</div>`:`<p class="muted">Aucun établissement dans l'échantillon pour cette voie. Importe l'open data pour voir la liste réelle.</p>`}</section>`;
+}
+function vFicheObj(id){
+  const o=obj(id),rs=routes(id),isGoal=profile.objectif===id;
+  return`<div><button class="btn link" data-back="1">← Retour</button></div>
+  <section class="card"><div class="spread"><div class="stack" style="gap:4px"><span class="label">Objectif · ${esc(DOMS[o.dom])} · ${esc(o.duree)}</span><h1>${esc(o.name)}</h1></div><button class="btn ${isGoal?"":"primary"}" data-goal="${id}" ${isGoal?"disabled":""}>${isGoal?"C'est ton objectif":"Choisir comme objectif"}</button></div><p>${esc(o.desc)}</p></section>
+  <section class="card"><h2>Comment y arriver depuis ton profil</h2><p class="small muted">Routes classées de la plus accessible à la moins accessible, selon ta moyenne de référence.</p>
+  ${rs.length?linkRows(rs.map(r=>({key:"v:"+r.v.id,name:r.v.name,kind:r.kind,txt:`${r.txt} · ${r.v.post?"1 an de plus":"coût estimé "+eur(r.cost)+" sur "+r.v.duree+" an"+(r.v.duree>1?"s":"")}`,z:r.z}))):`<p class="muted">Aucune route ouverte avec ta voie de bac.</p>`}
+  <p class="small muted">La zone d'une route décrit l'entrée dans la première formation. La réussite des concours et admissions parallèles n'est pas encore chiffrée : ces données restent à sourcer.</p></section>`;
+}
+function vFicheEtab(id){
+  const f=target("e:"+id);if(!f){ui.fiche=null;return vExplorer()}
+  const pos=positionner(f),v=voie(f.voie),pl=plan(f);
+  return`<div><button class="btn link" data-back="1">← Retour</button></div>
+  <section class="card"><div class="spread"><div class="stack" style="gap:4px"><span class="label">${esc(DOMS[f.d])}${v?" · "+esc(v.type):""}</span><h1>${esc(f.nom)}</h1><p class="muted">${esc([f.etab,f.ville,f.region].filter(Boolean).join(" · "))}</p></div>${cibleBtn(f.key)}</div>
+  <dl class="kv"><dt>Taux d'accès</dt><dd><span class="num">${fr(f.taux,0)} %</span> · ${tension(f.taux)}</dd><dt>Durée</dt><dd>${f.duree} an${f.duree>1?"s":""}</dd>${v?`<dt>Voie</dt><dd><button class="btn link" data-open="v:${v.id}">${esc(v.name)}</button> : suites et passerelles</dd>`:""}${f.lien?`<dt>Fiche officielle</dt><dd><a href="${esc(f.lien)}" target="_blank" rel="noopener">Voir sur Parcoursup</a></dd>`:""}</dl></section>
+  <div class="grid2 even"><section class="card"><div class="spread"><h2>Où tu te situes</h2>${zoneChip(pos.zone)}</div><p>${message(pos)}</p>${histo(f,pos)}
+  ${pos.manque.length?`<div class="alert bad">Spécialité attendue absente de ton profil : ${pos.manque.map(esc).join(", ")}. Ton positionnement est abaissé d'un niveau.</div>`:""}
+  <p class="small"><strong>Confiance : ${CLAB[pos.conf]}</strong>${pos.raisons.length?` (${pos.raisons.join(", ")})`:""}.</p><p class="small muted">${srcLine(f)}</p>${unknowns}</section>${coutCard(f)}</div>
+  <section class="card"><div class="spread"><h2>Pour augmenter tes chances</h2><button class="btn link" data-tab="plan">Voir mon plan complet</button></div><div>${pl.objs.map(o=>`<div class="obj"><span></span><div><div class="t">${esc(o.t)}</div><div class="small muted">${esc(o.d)}</div></div></div>`).join("")}</div></section>`;
+}
+
+/* ----- Plan ----- */
+function vPlan(){
+  let cibles=profile.cibles.map(target).filter(Boolean),auto=false;
+  if(!cibles.length){const r=routes(profile.objectif)[0];if(r){cibles=[target("v:"+r.v.id)];auto=true}}
+  return`<section class="card"><h2>Mon plan pour le trimestre</h2><p class="muted">Objectifs recalculés à chaque nouvelle note.${auto?" Tu n'as pas encore de cible : le plan suit la route la plus accessible vers ton objectif.":""} Coche-les quand c'est fait.</p></section>
+  ${cibles.map(f=>{const pl=plan(f);return`<section class="card"><div class="spread"><h3>${esc(f.nom)}</h3>${zoneChip(pl.pos.zone)}</div>
+    <div>${pl.objs.map(o=>`<label class="obj ${done[o.id]?"done":""}"><input type="checkbox" id="chk-${esc(o.id)}" data-done="${esc(o.id)}" ${done[o.id]?"checked":""}><div><div class="t">${esc(o.t)}</div><div class="small muted">${esc(o.d)}</div></div></label>`).join("")}</div></section>`}).join("")}
+  <section class="card"><h3>Échéances de l'année (${esc(profile.classe)})</h3><ul class="clean">${(ECHEANCES[profile.classe]||[]).map(e=>`<li>${esc(e)}</li>`).join("")}</ul>
+  <p class="small muted">Calendrier indicatif sur la base de 2025-2026. La réforme de Parcoursup annoncée pour 2027 peut le modifier.</p></section>`;
+}
+
+/* ----- Suivi : carte du parcours de la 2nde au bac ----- */
+function journeySVG(){
+  const PTS=[[70,200],[160,115],[250,185],[355,90],[445,195],[535,105],[640,190],[730,95],[820,180]],GOAL=[922,140];
+  const H=profile.historique,cur=curIdx();
+  const smooth=pts=>{let d=`M${pts[0][0]},${pts[0][1]}`;for(let i=0;i<pts.length-1;i++){const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;d+=` C${p1[0]+(p2[0]-p0[0])/6},${p1[1]+(p2[1]-p0[1])/6} ${p2[0]-(p3[0]-p1[0])/6},${p2[1]-(p3[1]-p1[1])/6} ${p2[0]},${p2[1]}`}return d};
+  const all=[...PTS,GOAL];
+  let s=`<svg viewBox="0 0 1000 280" role="img" aria-label="Moyennes trimestre par trimestre, de la seconde au bac">`;
+  [["SECONDE",20,295],["PREMIÈRE",300,585],["TERMINALE",590,875]].forEach(([t,a,b])=>{s+=`<rect x="${a+6}" y="16" width="${b-a-12}" height="250" rx="16" fill="var(--surface)" fill-opacity=".7"/><text x="${(a+b)/2}" y="38" text-anchor="middle" font-size="11" letter-spacing="2" fill="var(--muted)" font-weight="600">${t}</text>`});
+  s+=`<path d="${smooth(all)}" fill="none" stroke="var(--line)" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"/>`;
+  if(cur>0)s+=`<path d="${smooth(PTS.slice(0,cur+1))}" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>`;
+  PTS.forEach(([x,y],i)=>{const v=i<=cur?moyenne(H[i]):null,prev=i>0&&i<=cur?moyenne(H[i-1]):null,isCur=i===cur;
+    const fill=v==null?"var(--surface)":isCur?"var(--accent)":v>=14?"var(--good)":v>=10?"var(--muted)":"var(--bad)";
+    s+=`<circle cx="${x}" cy="${y}" r="21" fill="${fill}" stroke="${v==null?"var(--line)":"var(--surface)"}" stroke-width="3"/>
+      <text x="${x}" y="${y+4}" text-anchor="middle" font-size="12" font-weight="600" fill="${v==null?"var(--muted)":isCur?"var(--accent-ink)":"var(--surface)"}">${v!=null?fr(v):"?"}</text>
+      <text x="${x}" y="${y+40}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${TRIM[i].replace(" · "," ")}</text>`;
+    if(prev!=null&&Math.abs(v-prev)>=.3)s+=`<text x="${x+24}" y="${y-18}" font-size="10.5" font-weight="600" fill="${v>prev?"var(--good)":"var(--bad)"}">${v>prev?"▲":"▼"} ${fr(Math.abs(v-prev))}</text>`});
+  const o=obj(profile.objectif),r=routes(o.id)[0];
+  s+=`<rect x="${GOAL[0]-70}" y="${GOAL[1]-24}" width="140" height="48" rx="8" fill="var(--surface)" stroke="${r?ZCOL[r.z]:"var(--line)"}" stroke-width="2"/>
+    <text x="${GOAL[0]}" y="${GOAL[1]-3}" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--ink)" font-family="Source Sans 3, sans-serif">${esc(o.name.length>26?o.name.slice(0,25)+"…":o.name)}</text>
+    <text x="${GOAL[0]}" y="${GOAL[1]+12}" text-anchor="middle" font-size="10" fill="${r?ZCOL[r.z]:"var(--muted)"}">${r?ZSHORT[r.z]:"route fermée"}</text>`;
+  return s+`</svg>`;
+}
+function vSuivi(){
+  const c=current(),avg=moyenne(c);
+  const subj=Object.entries(c).filter(([,v])=>v!=null).sort((a,b)=>b[1]-a[1]);
+  const f=profile.cibles.map(target).filter(Boolean)[0];
+  return`<section class="card"><div class="spread"><h2>Mon parcours de la 2nde au bac</h2><span class="small muted">une escale par trimestre</span></div><div class="journey">${journeySVG()}</div>
+    <p class="small muted">Vert : 14 ou plus · gris : entre 10 et 14 · rouge : sous 10. Les flèches montrent l'évolution par rapport au trimestre précédent.</p></section>
+  <div class="grid2 even">
+  <section class="card"><h2>Forces et points faibles</h2><p class="small muted">${esc(TRIM[curIdx()])}, comparé à ta moyenne de ${fr(avg,2)}</p>
+    <div class="stack">${subj.map(([k,v])=>{const col=v>=avg+1?"var(--good)":v<=avg-1?"var(--bad)":"var(--muted)";return`<div class="sbar"><span>${SUBJECTS[k]}</span><div class="strack"><div class="sfill" style="width:${v/20*100}%;background:${col}"></div></div><span class="num">${fr(v)}</span></div>`}).join("")}</div></section>
+  <section class="card"><h2>Évolution de mon positionnement</h2>
+    ${f?`<p class="small muted">${esc(f.nom)} · zone calculée avec la moyenne de chaque trimestre</p><div class="tablewrap"><table><thead><tr><th>Trimestre</th><th class="n">Moyenne</th><th>Zone</th></tr></thead><tbody>${profile.historique.map((e,i)=>{const a=moyenne(e);return`<tr><td>${esc(TRIM[i])}</td><td class="n">${fr(a,2)}</td><td>${zoneChip(positionner(f,a).zone)}</td></tr>`}).join("")}</tbody></table></div>`:`<p class="muted">Ajoute une cible pour suivre ton positionnement.</p>`}
+  </section></div>`;
+}
+
+/* ----- Profil ----- */
+function vProfil(){
+  const c=current();
+  return`<section class="card"><h2>Mon profil</h2>
+   <div class="form">
+    <div class="field"><label for="prenom">Prénom</label><input id="prenom" value="${esc(profile.prenom)}"></div>
+    <div class="field"><label for="classe">Classe</label><select id="classe">${["2nde","1re","Terminale"].map(x=>`<option ${x===profile.classe?"selected":""}>${x}</option>`).join("")}</select></div>
+    <div class="field"><label for="bac">Voie du bac</label><select id="bac">${Object.entries(BACLBL).map(([k,l])=>`<option value="${k}" ${k===profile.bac?"selected":""}>${l}</option>`).join("")}</select></div>
+    <div class="field"><label for="region">Région</label><select id="region">${["Île-de-France","Auvergne-Rhône-Alpes","Hauts-de-France","Centre-Val de Loire","Nouvelle-Aquitaine","Occitanie","Provence-Alpes-Côte d'Azur","Grand Est","Bretagne","Pays de la Loire","Normandie","Bourgogne-Franche-Comté","Corse"].map(x=>`<option ${x===profile.region?"selected":""}>${x}</option>`).join("")}</select></div>
+    <div class="field"><label for="mobilite">Après le bac</label><select id="mobilite"><option value="parents" ${profile.mobilite==="parents"?"selected":""}>Rester chez mes parents si possible</option><option value="partir" ${profile.mobilite==="partir"?"selected":""}>Prêt(e) à partir</option></select></div>
+    <div class="field"><label for="budget">Budget frais de scolarité</label><select id="budget">${[["0","Pas de limite"],["3000","Jusqu'à 3 000 €/an"],["8000","Jusqu'à 8 000 €/an"],["15000","Jusqu'à 15 000 €/an"]].map(([v,l])=>`<option value="${v}" ${v===profile.budget?"selected":""}>${l}</option>`).join("")}</select></div>
+   </div>
+   ${profile.bac==="G"?`<div class="stack"><div class="label">Spécialités${profile.classe==="2nde"?" envisagées":""}</div>
+    <div class="seg" role="group" aria-label="Spécialités">${SPES.map(s=>`<button data-spe="${esc(s)}" aria-pressed="${profile.spes.includes(s)}">${esc(s)}</button>`).join("")}</div>
+    <p class="small muted">${profile.classe==="Terminale"?"2 spécialités en Terminale.":"3 spécialités en 1re."}</p></div>`:`<p class="small muted">En voie technologique ou professionnelle, des places sont réservées en BUT et en BTS : la carte des voies en tient compte.</p>`}
+  </section>
+  <section class="card"><div class="spread"><h2>Notes du trimestre</h2><span class="muted">${esc(TRIM[curIdx()])}</span></div>
+   <p class="small muted">Moyenne par matière et coefficient. Laisse vide une matière que tu ne suis pas.</p>
+   <div class="form">${Object.entries(SUBJECTS).map(([k,l])=>`<div class="field"><label for="n-${k}">${l}</label><div class="pair"><input id="n-${k}" data-note="${k}" type="number" min="0" max="20" step="0.5" inputmode="decimal" value="${c[k]??""}" placeholder="—" aria-label="Note de ${esc(l)}"><select id="c-${k}" data-coef="${k}" aria-label="Coefficient de ${esc(l)}">${[1,2,3,4].map(x=>`<option ${+(profile.coefs[k]||1)===x?"selected":""}>×${x}</option>`).join("")}</select></div></div>`).join("")}</div>
+   <div class="row"><button class="btn" data-newtri="1" ${curIdx()>=8?"disabled":""}>Clore le trimestre et passer au suivant</button><button class="btn" disabled title="Prévu en V1">Importer mon bulletin (PDF)</button><button class="btn link" data-resetprofile="1">Revenir au profil d'exemple</button></div>
+   <p class="small muted">L'import automatique du bulletin et la connexion à Pronote sont prévus dans la roadmap.</p>
+  </section>`;
+}
+
+/* ----- Données ----- */
+function vDonnees(){
+  const matched=data.rows.filter(r=>r.voie).length;
+  return`<section class="card"><h2>Brancher les vraies données Parcoursup</h2>
+   <p>Le moteur lit le fichier open data publié par le ministère de l'Enseignement supérieur. Tout reste dans ton navigateur.</p>
+   <ol class="clean"><li>Ouvre le jeu <a href="https://data.enseignementsup-recherche.gouv.fr/explore/dataset/fr-esr-parcoursup/export/" target="_blank" rel="noopener">Parcoursup – vœux de poursuite d'études</a>.</li><li>Onglet « Export », télécharge le CSV (ou le JSON).</li><li>Dépose-le ci-dessous.</li></ol>
+   <div><button class="btn" data-server="1">Charger les données du serveur</button></div>
+   <label class="drop" id="drop"><strong>Dépose le fichier ici</strong><span class="small muted">ou clique pour le choisir · CSV (séparateur ;) ou JSON</span><input id="file" type="file" accept=".csv,.json,text/csv,application/json" hidden></label>
+   <p id="importmsg" class="small" role="status">${data.source==="open"?`${data.rows.length.toLocaleString("fr-FR")} formations importées, dont ${matched.toLocaleString("fr-FR")} rattachées à une voie de la carte.`:""}</p>
+   ${data.source==="open"?`<div><button class="btn" data-sample="1">Revenir à l'échantillon d'exemple</button></div>`:""}
+  </section>
+  <section class="card"><h2>Ce que le prototype utilise</h2>
+   <div class="tablewrap"><table><thead><tr><th>Donnée</th><th>Colonne open data</th><th>Usage</th></tr></thead><tbody>
+    <tr><td>Intitulé, établissement, commune, région</td><td><code>lib_for_voe_ins</code>, <code>g_ea_lib_vx</code>, <code>ville_etab</code>, <code>region_etab_aff</code></td><td>Établissements, rattachement aux voies</td></tr>
+    <tr><td>Taux d'accès</td><td><code>taux_acces_ens</code></td><td>Tension de la formation</td></tr>
+    <tr><td>Mention au bac des admis</td><td><code>pct_sansmention</code>, <code>pct_ab</code>, <code>pct_b</code>, <code>pct_tb</code>, <code>pct_tbf</code></td><td>Positionnement (établissement et voie)</td></tr>
+    <tr><td>Effectif d'admis néo-bacheliers</td><td><code>acc_neobac</code></td><td>Confiance, pondération des voies</td></tr>
+    <tr><td>Statut public ou privé</td><td><code>contrat_etab</code></td><td>Coût</td></tr></tbody></table></div>
+   <p class="small muted">Non couverts par l'open data : spécialités des admis (fiches formation Parcoursup), frais des écoles privées, coût de la vie, débouchés et salaires (InserSup, Onisep), réussite des passerelles. Ils sont à collecter séparément.</p>
+  </section>`;
+}
+
+/* ================= RENDU ET ÉVÉNEMENTS ================= */
+function render(){
+  statsCache.clear();renderTabs();renderNotice();
+  const v=document.getElementById("view");
+  if(ui.fiche){const[k,id]=ui.fiche.split(":");v.innerHTML=k==="v"?vFicheVoie(id):k==="o"?vFicheObj(id):vFicheEtab(id)}
+  else v.innerHTML={accueil:vAccueil,voies:vVoies,explorer:vExplorer,plan:vPlan,suivi:vSuivi,profil:vProfil,donnees:vDonnees}[ui.tab]();
+  if(ui.tab==="donnees"&&!ui.fiche){const d=document.getElementById("drop"),fi=document.getElementById("file");
+    fi.onchange=()=>fi.files[0]&&loadFile(fi.files[0]);
+    d.ondragover=e=>{e.preventDefault();d.classList.add("over")};d.ondragleave=()=>d.classList.remove("over");
+    d.ondrop=e=>{e.preventDefault();d.classList.remove("over");e.dataTransfer.files[0]&&loadFile(e.dataTransfer.files[0])}}
+}
+let backTo=[];
+function openFiche(key){backTo.push(ui.fiche);ui.fiche=key;if(key.startsWith("v:")||key.startsWith("o:"))ui.sel=key.slice(2);render();scrollTo(0,0)}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-tab],[data-open],[data-node],[data-back],[data-dom],[data-toggle],[data-reset-filters],[data-bridge],[data-cible],[data-goal],[data-spe],[data-newtri],[data-resetprofile],[data-sample],[data-server]");if(!b)return;
+  const d=b.dataset;
+  if(d.server){loadServer(true)}
+  else if(d.open){e.preventDefault();openFiche(d.open)}
+  else if(d.node){if(ui.sel===d.sel)openFiche(d.node);else{ui.sel=d.sel;render()}}
+  else if(d.tab){ui.tab=d.tab;ui.fiche=null;backTo=[];render();scrollTo(0,0)}
+  else if(d.back){ui.fiche=backTo.pop()||null;render()}
+  else if(d.dom){ui.doms=ui.doms.includes(d.dom)?ui.doms.filter(x=>x!==d.dom):[...ui.doms,d.dom];ui.sel=null;render()}
+  else if(d.toggle){ui[d.toggle]=!ui[d.toggle];render()}
+  else if(d.resetFilters){ui.doms=[];ui.showPass=true;ui.hideBelow=false;ui.onlySpe=false;ui.sel=null;render()}
+  else if(d.bridge){ui.doms=[];ui.showPass=true;ui.hideBelow=false;ui.onlySpe=false;ui.sel=d.bridge;render();document.querySelector(".graphbox").scrollIntoView({behavior:"smooth",block:"center"})}
+  else if(d.cible){const i=profile.cibles.indexOf(d.cible);if(i>=0)profile.cibles.splice(i,1);else{profile.cibles.push(d.cible);if(profile.cibles.length>3)profile.cibles.shift()}save();render()}
+  else if(d.goal){profile.objectif=d.goal;save();render()}
+  else if(d.spe){const i=profile.spes.indexOf(d.spe),max=profile.classe==="Terminale"?2:3;if(i>=0)profile.spes.splice(i,1);else{profile.spes.push(d.spe);if(profile.spes.length>max)profile.spes.shift()}save();render()}
+  else if(d.newtri){if(curIdx()>=8)return;profile.historique.push({...current()});const n=curIdx();profile.classe=n<3?"2nde":n<6?"1re":"Terminale";save();render()}
+  else if(d.resetprofile){profile=structuredClone(DEFAULT_PROFILE);done={};store.set("orient.done",done);save();render()}
+  else if(d.sample){data={source:"sample",label:"Échantillon d'exemple",rows:SAMPLE.map(r=>({...r,d:voie(r.voie).dom}))};profile.cibles=structuredClone(DEFAULT_PROFILE.cibles);save();render()}
+});
+document.addEventListener("keydown",e=>{const g=e.target.closest&&e.target.closest("[data-node]");if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openFiche(g.dataset.node)}});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset.done){done[t.dataset.done]=t.checked;store.set("orient.done",done);t.closest(".obj").classList.toggle("done",t.checked)}
+  else if(t.dataset.note){const v=t.value===""?null:Math.min(20,Math.max(0,parseFloat(t.value)));if(v==null||isNaN(v))delete current()[t.dataset.note];else current()[t.dataset.note]=v;save()}
+  else if(t.dataset.coef){profile.coefs[t.dataset.coef]=parseInt(t.value.replace("×",""),10);save()}
+  else if(["classe","region","mobilite","budget","bac"].includes(t.id)){profile[t.id]=t.value;save();render()}
+  else if(t.id==="objectif"){profile.objectif=t.value;save();render()}
+});
+document.addEventListener("input",e=>{
+  if(e.target.id==="q"){ui.q=e.target.value;const p=e.target.selectionStart;render();const q=document.getElementById("q");q.focus();q.setSelectionRange(p,p)}
+  else if(e.target.id==="prenom"){profile.prenom=e.target.value;save()}
+});
+render();
+if(location.protocol.startsWith('http'))loadServer(false);
+</script>
+
+</body></html>
