@@ -385,6 +385,16 @@ textarea{width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius
 .adddev summary{color:var(--ink)}
 .simul{border-top:1px solid var(--rule);padding-top:16px;max-width:380px}
 .simul label{font-size:.82rem;color:var(--ink-3)}
+
+/* Sous-blocs d'une voie : les lycées, puis les écoles où elle mène */
+details.sub{margin-top:10px}
+details.sub>summary,details.fil>summary{cursor:pointer;list-style:none;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 0}
+details.sub>summary::-webkit-details-marker,details.fil>summary::-webkit-details-marker{display:none}
+details.sub>summary::before,details.fil>summary::before{content:"";width:7px;height:7px;flex:none;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(-45deg);margin:0 4px;transition:transform .15s}
+details.sub[open]>summary::before,details.fil[open]>summary::before{transform:rotate(45deg)}
+details.fil{border-top:1px solid var(--rule);padding:4px 0}
+details.fil>summary .t{min-width:38px}
+details.fil .tablewrap{margin:4px 0 6px 22px}
 </style>
 </head><body>
 <header class="app"><div class="wrap bar">
@@ -572,7 +582,7 @@ let profile=null;
 let done=store.get("orient5.done",{});
 const sampleRows=()=>SAMPLE.map(r=>({...r,d:VOIES.find(v=>v.id===r.voie).dom}));
 let data={source:"sample",label:"Échantillon d'exemple",rows:sampleRows()};
-const domOfRow=s=>/\bpass\b|licence_las|sante|sanitaire|medecine|infirm|kine|pharma|maieut|orthophon|ifsi|psychomot|ergotherap/.test(s)?"sante":/informatique|numerique|\bsio\b|reseaux/.test(s)?"num":/ingenieur|\bcpge .*(mpsi|pcsi|ptsi|mp2i|tsi|bcpst)|mathemat|physique|genie|mecanique|electr|chimie/.test(s)?"sci":/commerc|\becg\b|\bect\b|management|marketing|gestion|compta|econom|\baes\b|finance|negociation|\bdcg\b/.test(s)?"eco":/\bdroit\b|juridique|politique/.test(s)?"droit":/staps|\bsport|bpjeps/.test(s)?"sport":/design|\barts?\b|musique|cinema|dn made|audiovisuel/.test(s)?"arts":/lettres|langues|histoire|philo|psycho|sociolog|geograph|\blea\b|llcer/.test(s)?"lettres":"autre";
+const domOfRow=s=>/\bpass\b|licence_las|sante|sanitaire|medecine|infirm|kine|pharma|maieut|orthophon|ifsi|psychomot|ergotherap/.test(s)?"sante":/informatique|numerique|\bsio\b|reseaux/.test(s)?"num":/ingenieur|\bcpge .*(mpsi|pcsi|ptsi|mp2i|tsi|bcpst)|mathemat|physique|genie|mecanique|electr|chimie|bachelor of science/.test(s)?"sci":/commerc|\becg\b|\bect\b|management|marketing|gestion|compta|econom|\baes\b|finance|negociation|\bdcg\b/.test(s)?"eco":/\bdroit\b|juridique|politique/.test(s)?"droit":/staps|\bsport|bpjeps/.test(s)?"sport":/design|\barts?\b|musique|cinema|dn made|audiovisuel/.test(s)?"arts":/lettres|langues|histoire|philo|psycho|sociolog|geograph|\blea\b|llcer/.test(s)?"lettres":"autre";
 function loadEmbedded(){
   const el=document.getElementById("psup");if(!el)return;
   try{const j=JSON.parse(el.textContent),D=j.dict;
@@ -587,7 +597,7 @@ function loadEmbedded(){
 }
 
 let speData={source:"sample",label:"doublettes d'exemple",byVoie:SAMPLE_SPE};
-let ui={tab:"moi",sub:"carte",fiche:null,q:"",doms:[],showPass:true,hideBelow:false,onlySpe:false,onlyAlt:false,sel:null,metier:"",compare:[],menu:false};
+let ui={sceiAll:{},sceiOuvert:false,tab:"moi",sub:"carte",fiche:null,q:"",doms:[],showPass:true,hideBelow:false,onlySpe:false,onlyAlt:false,sel:null,metier:"",compare:[],menu:false};
 const save=()=>store.set("orient5.profile",profile);
 
 /* ================= OUTILS ================= */
@@ -601,7 +611,7 @@ const reste=x=>x>0?`−\u00a0${eur(x)}`:`+\u00a0${eur(-x)}`;
 const coutTxt=x=>x<0?`${eur(-x)} gagnés`:`${eur(x)} à financer`;
 const regKey=x=>norm(x).replace(/[^a-z]/g,"");
 /* Sources complémentaires fournies par le serveur de l'équipe (vides quand le site est ouvert seul) */
-const ext={baremes:null,insertion:[],loyers:{},metiers:[],appr:{},sources:null,distanceKm:40,inserjeunes:{},criteres:{}};
+const ext={baremes:null,insertion:[],loyers:{},metiers:[],appr:{},sources:null,distanceKm:40,inserjeunes:{},criteres:{},scei:[]};
 /* Critères d'examen des vœux : lus sur la fiche Parcoursup de chaque formation par le serveur (/api/criteres).
    Exemple intégré pour la page ouverte seule : fiche réelle de la licence de droit d'Évry, relevée le 4/11/2026. */
 Object.assign(ext.criteres,{"10945": {"grille": [{"categorie": "Résultats scolaires", "poids": 40.0}, {"categorie": "Méthodes de travail", "poids": 20.0}, {"categorie": "Savoir-être", "poids": 20.0}, {"categorie": "Motivation", "poids": 20.0}], "criteres": [{"categorie": "Vos résultats scolaires ou obtenus dans l'enseignement supérieur comptent pour 40%", "poids_categorie": 40.0, "critere": "Notes des matières littéraires (philosophie, français, histoire, sciences économiques et sociales)", "elements": "Moyenne des notes obtenues, progression, moyenne de la classe. Prise en compte des matières d'histoire, de philosophie, de SES, de français et des langues selon les matières présentes au baccalauréat.", "importance": "Très important", "niveau": 3}, {"categorie": "Vos compétences, méthodes de travail et savoir-faire comptent pour 20%", "poids_categorie": 20.0, "critere": "Maitrise de la langue française", "elements": "Notes dans les matières littéraires. Méthode de travail évaluée par le professeur principal dans la fiche avenir. Appréciations portées par les enseignants des matières littéraires.", "importance": "Important", "niveau": 2}, {"categorie": "Votre savoir-être compte pour 20%", "poids_categorie": 20.0, "critere": "Appréciation des comportements et de l'investissement", "elements": "Avis et appréciations portés sur les bulletins. \"Autonomie\" évaluée par le professeur principal dans la fiche avenir. \"Capacité à s'investir\" dans le travail, évaluée par le professeur principal dans la fiche avenir.", "importance": "Important", "niveau": 2}, {"categorie": "Votre motivation et la cohérence de votre projet comptent pour 20%", "poids_categorie": 20.0, "critere": "Cohérence du parcours", "elements": "Avis et appréciations portés sur les bulletins et sur la Fiche Avenir. Lettre de motivation et spécialisation choisie.", "importance": "Important", "niveau": 2}], "conseils": "Il est nécessaire d'avoir une lettre de motivation personnalisée expliquant le parcours, notamment pour les personnes en situation de réorientation. Il faut expliquer la spécificité de son parcours. Il n'est pas nécessaire d'avoir un projet parfaitement défini. Il faut également expliquer pourquoi il y a pu avoir des difficultés. Il faut ensuite éviter les formules toutes faites sur la qualité de l'établissement ou le prestige de la formation et ne pas mentir sur la présence aux portes ouvertes.", "session": 2026, "cordees": true, "g_ta_cod": "10945", "url": "https://dossierappel.parcoursup.fr/Candidats/public/fiches/afficherFicheFormation?g_ta_cod=10945&typeBac=0&originePc=0", "date_releve": "2026-11-04", "licence": "Licence Ouverte Etalab 2.0 (Parcoursup)"}});
@@ -685,6 +695,9 @@ function target(key){
   const r=etab(id);if(!r)return null;const v=voie(r.voie);
   return{key,kind:"etab",id,voie:r.voie,nom:r.nom,d:r.d,p:r.p,taux:r.taux,n:r.n,duree:v?v.duree:3,frais:r.prive?null:r.frais!==undefined?r.frais:(v?v.frais:null),prive:!!r.prive,alt:v?v.alt:0,ville:r.ville,region:r.region,etab:r.etab,real:data.source==="open",lien:r.lien,dep:r.dep,lat:r.lat,lon:r.lon,uai:r.uai};
 }
+/* En dessous de 10 admis néo-bacheliers, un seul admis pèse plus de 10 % : les seuils de 12 et 40 % n'ont plus de sens.
+   La zone n'est pas affichée (règle de l'application ; de 10 à 19 admis, elle s'affiche avec une fiabilité faible). */
+const MIN_ADMIS=10;
 function positionner(f,avg=refAvg()){
   const m=mentionIdx(avg);
   const share=avg<10?0:f.p.slice(0,m+1).reduce((a,b)=>a+b,0);
@@ -696,9 +709,11 @@ function positionner(f,avg=refAvg()){
   let conf=3;const raisons=[];
   if(!f.real){conf=1;raisons.push("valeurs d'exemple")}
   else{if(f.n!=null&&f.n<50){conf--;raisons.push(`peu d'admis (${fr(f.n,0)})`)}if(f.n==null){conf--;raisons.push("effectif d'admis inconnu")}if(!(speStats(f.voie)||{}).real){conf--;raisons.push("spécialités des admis non chargées")}}
-  return{m,share,zone,manque,conf:Math.max(1,conf),raisons,tresDemandee};
+  const peu=f.real&&f.n!=null&&f.n<MIN_ADMIS;if(peu)zone=null;
+  return{m,share,zone,manque,conf:Math.max(1,conf),raisons,tresDemandee:tresDemandee&&!peu,peu,n:f.n};
 }
-function message(pos){const mm=MENTIONS[pos.m].toLowerCase(),s=`<b>${fr(pos.share,0)} %</b> des admis de l'an dernier avaient ton niveau (${mm}) ou moins.`;
+const zoneOf=pos=>pos.peu?`<span class="chip out" title="Moins de ${MIN_ADMIS} admis néo-bacheliers l'an dernier">trop peu d'admis</span>`:zoneChip(pos.zone);
+function message(pos){if(pos.peu)return`Seulement <b>${fr(pos.n,0)} admis</b> néo-bachelier${pos.n>1?"s":""} l'an dernier : trop peu pour te situer. Un seul admis pèse déjà plus de 10 % du total.`;const mm=MENTIONS[pos.m].toLowerCase(),s=`<b>${fr(pos.share,0)} %</b> des admis de l'an dernier avaient ton niveau (${mm}) ou moins.`;
   if(pos.tresDemandee)return`${s} Mais moins d'un candidat sur cinq reçoit une proposition : ici, c'est le dossier qui départage.`;
   if(pos.zone==="coeur")return`${s} Tu es dans le cœur des admis.`;
   if(pos.zone==="marge")return`${s} La plupart avaient une mention au-dessus de la tienne.`;
@@ -848,7 +863,8 @@ function plan(f){
   let tgt=3,cum=0;for(let i=0;i<4;i++){cum+=f.p[i];if(cum>=40){tgt=i;break}}
   const seuil=Math.max(SEUILS[tgt],10),gap=avg==null?0:Math.max(0,seuil-avg);
   const objs=[],mention=MENTIONS[tgt].toLowerCase();
-  objs.push({id:`${f.key}-repere`,info:true,kind:"Repère",
+  if(pos.peu)objs.push({id:`${f.key}-repere`,info:true,kind:"Repère",t:`Pas de repère : ${fr(f.n,0)} admis seulement l'an dernier.`,d:"Trop peu pour en tirer une mention type. Regarde plutôt la voie entière, ou les critères publiés par la formation.",src:["psup"]});
+  else objs.push({id:`${f.key}-repere`,info:true,kind:"Repère",
     t:gap>0?`Le repère est à ${fr(seuil)} (${mention}). Tu es à ${fr(avg,2)}, soit ${fr(gap,2)} point en dessous.`:`Le repère est à ${fr(seuil)} (${mention}). Tu es à ${fr(avg,2)} : tu l'as atteint.`,
     d:`Au moins 40 % des admis de 2025 avaient cette mention ou moins${f.real?"":" (valeurs d'exemple pour cette formation)"}. C'est une photo des admis, pas une note promise : l'application ne fixe pas d'objectif par trimestre, parce que rien ne permet de prédire tes notes.`,
     src:f.real?["psup"]:[]});
@@ -980,7 +996,7 @@ function srcLine(f){
   if(f.kind==="voie")return f.real?`${esc(data.label)}, moyenne de ${f.count} formations${f.n?`, ${fr(f.n,0)} admis néo-bacheliers`:""}.`:"Valeurs d'exemple : avec le serveur, elles viennent de l'open data Parcoursup.";
   return f.real?`${esc(data.label)}${f.n!=null?`, ${fr(f.n,0)} admis néo-bacheliers`:""}.`:`Échantillon d'exemple${f.n?`, ${f.n} admis fictifs`:""}.`}
 function targetRow(f){const p=positionner(f),b=budget(f);const lieu=f.kind==="voie"?`Moyenne de ${plural(f.count||0,"formation")}`:[f.etab,f.ville].filter(Boolean).join(", ");
-  return`<button class="frow" data-open="${f.key}"><div><div class="t">${esc(f.nom)}</div><div class="meta">${esc(lieu)}. ${plural(f.duree,"an")}, ${b.partiel?"frais non publiés":coutTxt(b.best)+(b.alt&&b.best===b.alt.total&&profile.alternance!=="non"?" en alternance":"")}.</div></div><div class="right">${zoneChip(p.zone)}</div></button>`}
+  return`<button class="frow" data-open="${f.key}"><div><div class="t">${esc(f.nom)}</div><div class="meta">${esc(lieu)}. ${plural(f.duree,"an")}, ${b.partiel?"frais non publiés":coutTxt(b.best)+(b.alt&&b.best===b.alt.total&&profile.alternance!=="non"?" en alternance":"")}.</div></div><div class="right">${zoneOf(p)}</div></button>`}
 function cibleBtn(key){const on=profile.cibles.includes(key);return`<button class="btn ${on?"":"primary"}" data-cible="${key}">${on?"Retirer de mes cibles":"Ajouter à mes cibles"}</button>`}
 function compareBtn(key){const on=ui.compare.includes(key);return`<button class="btn" data-compare="${key}">${on?"Retirer de la comparaison":"Comparer"}</button>`}
 /* Les admis rangés par mention, de gauche à droite ; en surligné, ceux qui avaient la mention de l'élève ou moins. */
@@ -1078,7 +1094,7 @@ function vMoi(){
   <section class="card"><h2>Matière par matière</h2><p class="muted">Autour de ta moyenne du trimestre (${fr(avg,2)}). En rouge, ce qui tire vers le bas.</p>
     <div class="dots">${subj.map(([k,v])=>{const lo=v<=avg-1,a=DX(avg),x=DX(v);return`<div class="drow"><span>${SUBJECTS[k]}</span><div class="dtrack"><div class="dbar" style="left:${Math.min(a,x)}%;width:${Math.abs(x-a)}%"></div><div class="avg" style="left:${a}%"></div><div class="d ${lo?"lo":""}" style="left:${x}%"></div></div><span class="v">${fr(v)}</span></div>`}).join("")}</div></section>
   ${f?`<section class="card"><h2>Avec ma première cible</h2><p class="muted">${esc(f.nom)}${f.ville?`, ${esc(f.ville)}`:""} : où tu te serais situé à chaque trimestre.</p>
-    <div class="tablewrap"><table><tbody>${profile.historique.map((e,i)=>{const a=moyenne(e);return`<tr><td>${esc(TRIM[i].replace(" · "," "))}</td><td class="n">${fr(a,2)}</td><td class="n">${zoneChip(positionner(f,a).zone)}</td></tr>`}).join("")}</tbody></table></div></section>`:`<section class="card"><h2>Avec ma première cible</h2><p class="muted">Ajoute une cible dans « Où je peux aller » pour voir ta place trimestre après trimestre.</p></section>`}
+    <div class="tablewrap"><table><tbody>${profile.historique.map((e,i)=>{const a=moyenne(e);return`<tr><td>${esc(TRIM[i].replace(" · "," "))}</td><td class="n">${fr(a,2)}</td><td class="n">${zoneOf(positionner(f,a))}</td></tr>`}).join("")}</tbody></table></div></section>`:`<section class="card"><h2>Avec ma première cible</h2><p class="muted">Ajoute une cible dans « Où je peux aller » pour voir ta place trimestre après trimestre.</p></section>`}
   </div></div>
   ${vControles()}`;
 }
@@ -1169,9 +1185,48 @@ function vCarte(){
     <p class="small muted">Les passerelles qu'on n'a pas pu vérifier sont retirées. Exemple : « avocat via Sciences Po », car la liste des diplômes équivalents au master 1 de droit date de 1998 et le Conseil national des barreaux demande sa révision. Les taux de réussite des concours ne sont pas publiés en open data, ils ne sont donc pas chiffrés.</p>
   </section>`;
 }
+/* Recherche par début de mot : « hec » ne trouve plus « Lycée Claude Lehec ». Les mots d'une ou deux lettres doivent être entiers.
+   Quelques noms d'usage que les données n'emploient pas sont traduits vers le nom officiel. */
+const ALIAS={"x":"=ecole polytechnique","l'x":"=ecole polytechnique","l x":"=ecole polytechnique","iep":"etudes politiques","utc":"technologie de compiegne"};
+const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+function matchQ(r,q){const h=" "+norm(r.nom+" "+r.etab+" "+r.ville+" "+(r.fili||"")).replace(/[^a-z0-9]+/g," ")+" ";
+  const a=ALIAS[q];if(a&&a[0]==="=")return norm(r.etab)===a.slice(1);
+  return(a||q).replace(/[^a-z0-9]+/g," ").trim().split(" ").every(w=>new RegExp(" "+reEsc(w)+(w.length<3?" ":"")).test(h))}
+/* Écoles qui recrutent après une prépa : statistiques du SCEI (hors Parcoursup) */
+function sceiEcoles(q){if(!ext.scei.length||norm(q).length<3)return[];
+  const ws=norm(ALIAS[q]&&ALIAS[q][0]!=="="?ALIAS[q]:q).replace(/[^a-z0-9]+/g," ").trim().split(" ");
+  const ok=e=>{const h=" "+norm(e).replace(/[^a-z0-9]+/g," ")+" ";return ws.every(w=>new RegExp(" "+reEsc(w)+(w.length<3?" ":"")).test(h))};
+  const by={};ext.scei.filter(r=>r.niveau==="ecole"&&r.ecole&&ok(r.ecole)).forEach(r=>(by[r.ecole]??=[]).push(r));
+  return Object.entries(by).slice(0,12)}
+const nb=x=>x==null?"":fr(x,0);
+function sceiHTML(q){const E=sceiEcoles(q);
+  if(!E.length)return norm(q).length>=3&&!ext.scei.length?`<p class="small muted">Les écoles qui recrutent après une prépa, par concours, ne sont pas dans Parcoursup. Elles s'affichent ici quand le serveur a lu les statistiques du SCEI (python scei.py).</p>`:"";
+  const an=Math.max(...E.flatMap(([,rs])=>rs.map(r=>r.annee||0)));
+  return`<section class="stack" style="gap:14px"><h2>Après une prépa</h2><p class="muted" style="margin-top:-8px">Ces écoles ne passent pas par Parcoursup : on y entre après deux ans de classe prépa, par concours. Chiffres du SCEI, session ${an||""}.</p>
+   ${E.map(([e,rs])=>`<div class="tint stack" style="gap:8px"><h3>${esc(e)}</h3>
+     <div class="tablewrap"><table><thead><tr><th>Filière de prépa</th><th>Concours</th><th class="n">Places</th><th class="n">Inscrits</th><th class="n">Admissibles</th><th class="n">Entrés</th></tr></thead>
+     <tbody>${rs.sort((a,b)=>(a.filiere||"").localeCompare(b.filiere||"")||(a.concours||"").localeCompare(b.concours||"")).map(r=>`<tr><td>${esc(r.filiere||"non précisée")}</td><td class="small">${esc(r.concours||"")}</td><td class="n">${nb(r.places)}</td><td class="n">${nb(r.inscrits)}</td><td class="n">${nb(r.admissibles)}</td><td class="n">${nb(r.entres)}</td></tr>`).join("")}</tbody></table></div>
+     <p class="small muted">${(()=>{const P=rs.reduce((a,r)=>a+(r.places||0),0);return P?`${fr(P,0)} places au total. Les inscrits comptent tous les candidats du concours, pas seulement ceux qui visaient cette école.`:""})()}</p></div>`).join("")}
+   <p class="small srcl">Source : statistiques du SCEI (<a href="https://www.scei-concours.fr/" target="_blank" rel="noopener">scei-concours.fr</a>), lues par le serveur de l'équipe.</p></section>`}
+/* Les écoles où mène une prépa : filières de deuxième année et statistiques SCEI. Une seule voie concernée dans le prototype. */
+const SCEI_VOIES={cpge_mp:[["MP","Maths-physique","après MPSI ou MP2I"],["MPI","Maths-physique-informatique","après MP2I"],["PC","Physique-chimie","après PCSI"],["PSI","Physique et sciences de l'ingénieur","après MPSI ou PCSI"],["PT","Physique et technologie","après PTSI"]]};
+const SCEI_TOP=20;
+function apresPrepa(fils){
+  if(!ext.scei.length)return`<details class="sub"><summary><span class="t">Les écoles où elle mène</span></summary><p class="small muted" style="padding:6px 0 0 22px">Les écoles qui recrutent après la prépa, par concours, s'affichent ici quand le serveur a lu les statistiques du SCEI (python scei.py).</p></details>`;
+  const E=ext.scei.filter(r=>r.niveau==="ecole"),an=Math.max(...E.map(r=>r.annee||0));
+  const blocs=fils.map(([f,nom,de])=>{
+    const by={};E.filter(r=>r.annee===an&&r.filiere===f&&r.places).forEach(r=>{const x=by[r.ecole]??={ecole:r.ecole,places:0,entres:0,concours:new Set()};x.places+=r.places||0;x.entres+=r.entres||0;if(r.concours)x.concours.add(r.concours)});
+    const L=Object.values(by).sort((a,b)=>b.places-a.places||a.ecole.localeCompare(b.ecole)),tout=ui.sceiAll[f],vus=tout?L:L.slice(0,SCEI_TOP),P=L.reduce((a,x)=>a+x.places,0);
+    if(!L.length)return"";
+    return`<details class="fil" ${tout?"open":""}><summary><span class="t">${f}</span><span class="muted small">${esc(nom)}, ${esc(de)}</span><span class="count">${plural(L.length,"école")}, ${P.toLocaleString("fr-FR")} places</span></summary>
+     <div class="tablewrap"><table><thead><tr><th>École</th><th>Concours</th><th class="n">Places</th><th class="n">Entrés</th></tr></thead><tbody>
+     ${vus.map(x=>`<tr><td>${esc(x.ecole)}</td><td class="small muted">${esc([...x.concours].join(", "))}</td><td class="n">${fr(x.places,0)}</td><td class="n">${fr(x.entres,0)}</td></tr>`).join("")}</tbody></table></div>
+     ${L.length>SCEI_TOP?`<button class="btn link small" data-sceiall="${f}" style="margin-top:8px">${tout?`Revenir aux ${SCEI_TOP} premières`:`Voir les ${L.length} écoles`}</button>`:""}</details>`}).join("");
+  return`<details class="sub" ${ui.sceiOuvert?"open":""}><summary><span class="t">Les écoles où elle mène</span><span class="count">concours ${an}</span></summary>
+   <div class="stack" style="gap:2px;padding-left:22px"><p class="small muted" style="padding:6px 0">Après la première année, la prépa se poursuit dans une filière de deuxième année. Chaque filière a ses concours et ses écoles, classées ici par nombre de places. Chiffres du SCEI : ces écoles ne passent pas par Parcoursup.</p>${blocs}</div></details>`}
 function vEtabs(){
   const q=norm(ui.q),LIM=60;
-  const rows=data.rows.filter(r=>(!q||norm(r.nom+" "+r.etab+" "+r.ville).includes(q))&&(!ui.onlyAlt||voie(r.voie)?.alt));
+  const rows=data.rows.filter(r=>(!q||matchQ(r,q))&&(!ui.onlyAlt||voie(r.voie)?.alt)),alias=ALIAS[q];
   const byDom={};rows.forEach(r=>{((byDom[r.d]??={})[r.voie||"_"]??=[]).push(r)});
   const doms=Object.keys(DOMS).filter(d=>byDom[d]||(!q&&!ui.onlyAlt&&VOIES.some(v=>v.dom===d)));
   return`<section class="card">
@@ -1180,10 +1235,14 @@ function vEtabs(){
     <div>${doms.map(d=>{const groups=byDom[d]||{};const total=Object.values(groups).flat().length;
       const vids=[...VOIES.filter(v=>v.dom===d&&!v.post&&bacOk(v)&&(groups[v.id]||(!q&&!ui.onlyAlt))).map(v=>v.id),...(groups._?["_"]:[])];
       if(!vids.length)return"";
-      return`<details class="dom" ${q||d==="eco"?"open":""}><summary><span class="t">${DOMS[d]}</span><span class="count">${total.toLocaleString("fr-FR")}</span></summary>
+      return`<details class="dom" ${q||d==="eco"||(ui.sceiOuvert&&vids.some(x=>SCEI_VOIES[x]))?"open":""}><summary><span class="t">${DOMS[d]}</span><span class="count">${total.toLocaleString("fr-FR")}</span></summary>
       ${vids.map(vid=>{const list=groups[vid]||[],v=voie(vid),z=v?zoneVoie(v):null;
-        return`<details class="voie" ${(q&&list.length)||vid==="but_tc"?"open":""}><summary><span class="t">${v?esc(v.name):"Autres formations"}</span><span class="count">${list.length}</span>${z?zoneChip(z):""}${v?`<button class="btn link small" data-open="v:${v.id}">La voie en détail</button>`:""}</summary>
-        <div class="etabs">${list.length?list.slice(0,LIM).map(r=>targetRow(target("e:"+r.id))).join("")+(list.length>LIM?`<p class="small muted" style="padding-top:10px">${LIM} sur ${list.length}. Précise ta recherche pour voir les autres.</p>`:""):`<p class="small muted">Aucun établissement dans l'échantillon pour cette voie.</p>`}</div></details>`}).join("")}</details>`}).join("")}</div>
+        const etabsHTML=`<div class="etabs">${list.length?list.slice(0,LIM).map(r=>targetRow(target("e:"+r.id))).join("")+(list.length>LIM?`<p class="small muted" style="padding-top:10px">${LIM} sur ${list.length}. Précise ta recherche pour voir les autres.</p>`:""):`<p class="small muted">Aucun établissement dans l'échantillon pour cette voie.</p>`}</div>`;
+        const apres=SCEI_VOIES[vid];
+        return`<details class="voie" ${(q&&list.length)||vid==="but_tc"||(apres&&ui.sceiOuvert)?"open":""}><summary><span class="t">${v?esc(v.name):"Autres formations"}</span><span class="count">${list.length}</span>${z?zoneChip(z):""}${v?`<button class="btn link small" data-open="v:${v.id}">La voie en détail</button>`:""}</summary>
+        ${apres?`<details class="sub" ${q||ui.sceiOuvert?"":"open"}><summary><span class="t">Les lycées qui la proposent</span><span class="count">${list.length}</span></summary>${etabsHTML}</details>${apresPrepa(apres)}`:etabsHTML}</details>`}).join("")}</details>`}).join("")}</div>
+    ${q?sceiHTML(q):""}
+    ${alias?`<p class="small muted">« ${esc(ui.q)} » est cherché sous son nom officiel : ${esc(alias.replace(/^=/,""))}.</p>`:""}
     <p class="small muted">${data.source==="open"?"Chaque formation est rangée dans une voie d'après son intitulé. Celles qui n'entrent dans aucune voie sont dans « Autres formations ».":"Échantillon d'exemple : avec le serveur, les 14 000 formations Parcoursup apparaissent ici."}</p>
   </section>`;
 }
@@ -1191,7 +1250,7 @@ function vComparer(){
   const items=ui.compare.map(target).filter(Boolean);
   if(!items.length)return`<section class="card"><h2>Rien à comparer pour l'instant</h2><p class="muted">Sur la fiche d'une voie ou d'un établissement, le bouton « Comparer » l'ajoute ici. Trois au maximum.</p>${profile.cibles.length?`<div><button class="btn primary" data-compare-cibles="1">Comparer mes cibles</button></div>`:""}</section>`;
   const rows=[
-    ["Où tu te situes",f=>zoneChip(positionner(f).zone)],
+    ["Où tu te situes",f=>zoneOf(positionner(f))],
     ["Taux d'accès",f=>f.taux!=null?`${fr(f.taux,0)} %, ${tension(f.taux)}`:"inconnu"],
     ["Mention la plus fréquente chez les admis",f=>MENTIONS[f.p.indexOf(Math.max(...f.p))]],
     ["Durée",f=>plural(f.duree,"an")],
@@ -1216,7 +1275,7 @@ function head(label,title,sub,actions){return`<div class="stack" style="gap:18px
 function factsBar(f){const b=budget(f),v=voie(f.voie);return`<div class="stack" style="gap:10px"><div class="facts"><div class="fact"><span>Taux d'accès</span><b>${f.taux!=null?fr(f.taux,0)+" %":"inconnu"} <small>${tension(f.taux)}</small></b></div><div class="fact"><span>Durée</span><b>${plural(f.duree,"an")}</b></div><div class="fact"><span>Bilan, formation classique</span><b>${b.partiel?"frais non publiés":reste(b.classique.total)}</b></div><div class="fact"><span>Alternance</span><b>${f.alt?`dès la ${f.alt}e année`:"rare"}</b>${v&&v.altSrc?`<span>${(v.altN||0).toLocaleString("fr-FR")} formations en apprentissage</span>`:f.alt?`<span>estimation de l'équipe</span>`:""}</div></div>
    ${v&&v.bacShare?`<p class="small muted">L'an dernier, ses admis avaient à ${fr(v.bacShare.G*100,0)} % un bac général, ${fr(v.bacShare.T*100,0)} % un bac techno et ${fr(v.bacShare.P*100,0)} % un bac pro.</p>`:""}</div>`}
 function posCard(f){const pos=positionner(f);
-  return`<section class="card"><div class="spread"><h2>Où tu te situes</h2>${zoneChip(pos.zone)}</div><p class="strip-cap">${message(pos)}</p>${histo(f,pos)}
+  return`<section class="card"><div class="spread"><h2>Où tu te situes</h2>${zoneOf(pos)}</div><p class="strip-cap">${message(pos)}</p>${pos.peu?"":histo(f,pos)}
    ${pos.manque.length?`<div class="alert bad">La plupart des admis suivaient ${pos.manque.map(esc).join(", ")}, que tu n'as pas : ta zone baisse d'un cran.</div>`:""}
    ${speBlock(f)}
    <p class="small"><strong>Fiabilité ${CLAB[pos.conf]}</strong>${pos.raisons.length?` : ${pos.raisons.join(", ")}`:""}. <span class="srcl">${srcLine(f)}</span></p>${UNKNOWN}${HOW_ZONE}</section>`}
@@ -1227,7 +1286,7 @@ function vFicheVoie(id){
   const ins=EDGES.filter(e=>e[1]===id).map(e=>({key:"v:"+e[0],name:voie(e[0]).name,kind:e[2],txt:e[3],src:e[4],z:zoneVoie(voie(e[0]))}));
   if(v.post)return head(v.type,v.name,esc(v.desc))+`<div class="grid2 even"><section class="card"><h2>Pour y entrer</h2>${linkRows(ins)}</section><section class="card"><h2>Et après</h2>${linkRows(outs)}</section></div>`;
   const f=target("v:"+id);
-  const list=data.rows.filter(r=>r.voie===id).map(r=>target("e:"+r.id)).sort((a,b)=>ZRANK[positionner(b).zone]-ZRANK[positionner(a).zone]).slice(0,12);
+  const list=data.rows.filter(r=>r.voie===id).map(r=>target("e:"+r.id)).sort((a,b)=>(ZRANK[positionner(b).zone]??-1)-(ZRANK[positionner(a).zone]??-1)).slice(0,12);
   return head(`${v.type}, ${DOMS[v.dom].toLowerCase()}`,v.name,esc(v.desc),cibleBtn(f.key)+compareBtn(f.key))+factsBar(f)+
    `<div class="grid2">${posCard(f)}${budgetCard(f)}</div>
     <div class="grid2 even"><section class="card"><h2>Et après</h2>${linkRows(outs)}${insertionHTML(id)||`<p class="small muted">Les taux d'emploi et les salaires des diplômés (InserSup, ministère de l'Enseignement supérieur) s'affichent ici quand le serveur tourne.</p>`}${(()=>{const a=apprInfo(id);return a&&a.top.length?`<div class="stack"><h3>Métiers visés</h3><p class="small">${a.top.map(t=>`<a href="https://candidat.francetravail.fr/metierscope/fiche-metier/${encodeURIComponent(t.code)}" target="_blank" rel="noopener">${esc(t.nom)}</a>`).join(", ")}</p><p class="small muted">D'après les codes métiers ROME des ${a.n.toLocaleString("fr-FR")} formations de cette voie en apprentissage (API Apprentissage, France Travail).</p></div>`:`<p class="small muted">Débouchés, selon l'équipe : ${v.deb.map(esc).join(", ").toLowerCase()}.</p>`})()}</section>${planCard(f)}</div>
@@ -1236,7 +1295,9 @@ function vFicheVoie(id){
 function vFicheObj(id){
   const o=obj(id),rs=routes(id),isGoal=profile.objectif===id,ins=insertionHTML(id);
   return head(`Objectif d'études, ${o.duree.toLowerCase()}`,o.name,esc(o.desc),`<button class="btn ${isGoal?"":"primary"}" data-goal="${id}" ${isGoal?"disabled":""}>${isGoal?"C'est ton objectif":"En faire mon objectif"}</button>`)+
-  (ins?`<section class="card"><h2>Ce que deviennent les diplômés</h2>${ins}</section>`:"")+`<section class="card"><h2>Les chemins depuis ton profil</h2><p class="muted">Du plus accessible au moins accessible pour toi, puis du moins cher au plus cher.</p>
+  (ins?`<section class="card"><h2>Ce que deviennent les diplômés</h2>${ins}</section>`:"")+(id==="inge"&&ext.scei.length?(()=>{const F=ext.scei.filter(r=>r.niveau==="filiere"),an=Math.max(...F.map(r=>r.annee||0)),L=F.filter(r=>r.annee===an);return L.length?`<section class="card"><h2>Après une prépa : les concours</h2><p class="muted">Toutes écoles confondues, session ${an}. Pour une école précise, cherche son nom dans « Les établissements ».</p>
+   <div class="tablewrap"><table><thead><tr><th>Filière de prépa</th><th class="n">Inscrits</th><th class="n">Places</th><th class="n">Entrés</th></tr></thead><tbody>${L.map(r=>`<tr><td>${esc(r.filiere)}</td><td class="n">${nb(r.inscrits)}</td><td class="n">${nb(r.places)}</td><td class="n">${nb(r.entres)}</td></tr>`).join("")}</tbody></table></div>
+   <p class="small srcl">Source : statistiques du SCEI (scei-concours.fr).</p></section>`:""})():"")+`<section class="card"><h2>Les chemins depuis ton profil</h2><p class="muted">Du plus accessible au moins accessible pour toi, puis du moins cher au plus cher.</p>
   ${rs.length?`<div class="tablewrap"><table><thead><tr><th>Chemin</th><th>Ta place</th><th class="n">Bilan classique</th><th class="n">En alternance</th></tr></thead><tbody>${rs.map(r=>`<tr><td><button class="btn link" style="text-align:left" data-open="v:${r.v.id}">${esc(r.v.name)}</button>${r.kind==="passerelle"?' <span class="chip pass">passerelle</span>':""}<div class="small muted">${esc(r.txt)}</div>${r.src?`<div class="small srcl">${srcLinks(r.src)}</div>`:""}</td><td>${zoneChip(r.z)}</td><td class="n">${r.cost?(r.cost.partiel?"inconnu":reste(r.cost.classique.total)):"1 an de plus"}</td><td class="n">${r.cost&&r.cost.alt?`<span class="hl">${reste(r.cost.alt.total)}</span>`:"inconnu"}</td></tr>`).join("")}</tbody></table></div>`:`<p class="muted">Aucun chemin ouvert avec ton bac.</p>`}
   <p class="small muted">Le bilan porte sur la première formation du chemin. Les taux de réussite des concours ne sont pas publiés en open data : ils ne sont pas chiffrés.</p></section>`;
 }
@@ -1455,7 +1516,7 @@ function vArriver(){
   ${vAnnee()}
   <section class="card"><h2>Ce que regarde chaque cible</h2><p class="muted">Le repère de mention, les critères publiés, les spécialités des admis.</p>
    ${auto?`<div class="alert">Tu n'as pas encore de cible : on suit le chemin le plus accessible vers ton objectif.</div>`:""}
-   <div>${cibles.map((f,ci)=>{const pl=plan(f);return`<details class="dom" ${ci?"":"open"}><summary><span class="t">${esc(f.nom)}${f.ville?`, ${esc(f.ville)}`:""}</span>${zoneChip(pl.pos.zone)}</summary>
+   <div>${cibles.map((f,ci)=>{const pl=plan(f);return`<details class="dom" ${ci?"":"open"}><summary><span class="t">${esc(f.nom)}${f.ville?`, ${esc(f.ville)}`:""}</span>${zoneOf(pl.pos)}</summary>
      <div style="padding:6px 0 0 22px">${pl.objs.filter(o=>!o.common).map(o=>objHTML(ci&&o.kind==="Repère"?{...o,d:"",src:[]}:o,true)).join("")}</div></details>`}).join("")}</div>
    ${cibles.length?HOW_PLAN:""}</section>
   ${profile.classe==="1re"&&profile.bac==="G"?vChoixSpe(cibles):""}
@@ -1488,7 +1549,7 @@ function vParent(){
   return`<div class="pagehead"><span class="chip mock">Maquette, avec les données de démonstration</span><h1>Espace parent</h1><p>Le point mensuel que reçoit un parent. L'élève choisit ce qu'il partage.</p></div>
   <section class="card"><div class="spread"><h2>Le point de novembre sur ${esc(profile.prenom)}</h2><span class="small muted">${esc(CLASSENOM[profile.classe]||profile.classe)}</span></div>
    <div class="facts"><div class="fact"><span>Moyenne du trimestre</span><b>${fr(c,2)}</b><span>${prev==null?"":c>=prev?`en hausse de ${fr(c-prev,2)}`:`en baisse de ${fr(prev-c,2)}`}</span></div><div class="fact"><span>Moyenne de référence</span><b>${fr(ref,2)}</b></div><div class="fact"><span>Missions de la semaine</span><b>${weekStats(semaine()).n} <small>sur ${weekStats(semaine()).total}</small></b></div><div class="fact"><span>Objectif</span><b style="font-size:1.05rem">${esc(obj(profile.objectif).name)}</b></div></div>
-   <div class="stack"><h3>Ses cibles</h3>${cibles.map(f=>{const b=budget(f);return`<div class="spread"><span>${esc(f.nom)}</span><span class="row">${zoneChip(positionner(f).zone)}<span class="small num">${b.partiel?"":reste(b.best)}</span></span></div>`}).join("")||'<p class="muted">Aucune cible partagée.</p>'}</div>
+   <div class="stack"><h3>Ses cibles</h3>${cibles.map(f=>{const b=budget(f);return`<div class="spread"><span>${esc(f.nom)}</span><span class="row">${zoneOf(positionner(f))}<span class="small num">${b.partiel?"":reste(b.best)}</span></span></div>`}).join("")||'<p class="muted">Aucune cible partagée.</p>'}</div>
    <div class="stack"><h3>À venir</h3><ul style="margin:0;padding-left:20px">${(ECHEANCES[profile.classe]||[]).slice(0,2).map(e=>`<li>${esc(e)}</li>`).join("")}</ul></div>
    <p class="small muted">Le parent ne voit ni le détail des notes ni les objectifs non partagés, sauf pour un élève de moins de 15 ans dont le compte est rattaché au parent.</p></section>`;
 }
@@ -1528,6 +1589,7 @@ function vDonnees(){
    <tr><td>Voies, débouchés</td><td>Référentiel de l'application ; Onisep en production</td><td>Écrit par l'équipe</td></tr>
    <tr><td>Métiers</td><td>${ext.metiers[0]&&ext.metiers[0].source==="rome"?"Référentiel ROME 4.0, France Travail (API, clé gratuite) ; Onisep en maintenance":"Fiches métiers Idéo, Onisep"}</td><td>${ext.metiers.length?`Réel, ${ext.metiers.length.toLocaleString("fr-FR")} métiers`:"Exemple"}</td></tr>
    <tr><td>Formations en apprentissage</td><td>API Apprentissage (clé gratuite)</td><td>${Object.keys(ext.appr).length?"Réel":"Estimation par voie"}</td></tr>
+   <tr><td>Écoles après une prépa : places, inscrits, entrés par filière</td><td>Statistiques du SCEI (scei-concours.fr), pages publiques lues une fois par an : ces écoles ne passent pas par Parcoursup</td><td>${ext.scei.length?`Réel, ${ext.scei.length.toLocaleString("fr-FR")} lignes`:"Non chargé"}</td></tr>
    <tr><td>Insertion après un BTS en lycée</td><td>InserJeunes, ministère de l'Éducation nationale (API open data)</td><td>${Object.keys(ext.inserjeunes).length?"Réel":"Non chargé"}</td></tr></tbody></table></div></section>`;
 }
 
@@ -1542,7 +1604,7 @@ let backTo=[];
 function openFiche(key){backTo.push(ui.fiche);ui.fiche=key;if(key.startsWith("v:")||key.startsWith("o:"))ui.sel=key.slice(2);render();scrollTo(0,0)}
 function setMetier(m){ui.metier=m;const x=currentMetier();if(x&&x.o){profile.objectif=x.o;ui.sel=x.o;ui.doms=[];save()}}
 document.addEventListener("click",e=>{
-  const b=e.target.closest("[data-tab],[data-menu],[data-sub],[data-open],[data-node],[data-back],[data-dom],[data-toggle],[data-reset-filters],[data-bridge],[data-cible],[data-compare],[data-compare-cibles],[data-compare-clear],[data-goal],[data-spe],[data-newtri],[data-resetprofile],[data-ctladd],[data-ctlsave],[data-ctldel],[data-pip],[data-mis],[data-carnet],[data-decouv],[data-focus],[data-dev],[data-corr],[data-etape],[data-devadd],[data-simul],[data-pipall]");
+  const b=e.target.closest("[data-tab],[data-menu],[data-sub],[data-open],[data-node],[data-back],[data-dom],[data-toggle],[data-reset-filters],[data-bridge],[data-cible],[data-compare],[data-compare-cibles],[data-compare-clear],[data-goal],[data-spe],[data-newtri],[data-resetprofile],[data-ctladd],[data-ctlsave],[data-ctldel],[data-pip],[data-mis],[data-carnet],[data-decouv],[data-focus],[data-dev],[data-corr],[data-etape],[data-devadd],[data-simul],[data-pipall],[data-sceiall]");
   if(ui.menu&&(!b||!b.dataset.menu)){ui.menu=false;if(!b){renderChrome();return}}
   if(!b)return;
   const d=b.dataset;
@@ -1553,6 +1615,7 @@ document.addEventListener("click",e=>{
     const n=g("ctl-n-"+c.id);if(n==null)return;c.note=n;c.moy=g("ctl-m-"+c.id);save();render();return}
   if(d.pip){const c=ctls().find(x=>x.id===d.pip);if(!c)return;const n=+d.n;c.seances=(c.seances||0)===n?n-1:n;ui.flash="prep-"+c.id;save();render();ui.flash=null;return}
   if(d.mis){const W=semaine();W.done[d.mis]=!W.done[d.mis];ui.flash=d.mis;save();render();ui.flash=null;return}
+  if(d.sceiall){ui.sceiAll[d.sceiall]=!ui.sceiAll[d.sceiall];ui.sceiOuvert=true;render();return}
   if(d.pipall){const x=ctls().find(v=>v.id===d.pipall);if(!x)return;const tot=+d.total||3;x.seances=(x.seances||0)>=tot?0:tot;ui.flash="prep-"+x.id;save();render();ui.flash=null;return}
   if(d.dev){const x=(profile.devoirs||[]).find(v=>v.id===d.dev);if(!x)return;x.fait=!x.fait;ui.flash="dev-"+x.id;save();render();ui.flash=null;return}
   if(d.corr){const x=ctls().find(v=>v.id===d.corr);if(!x)return;x.corrige=x.corrige?null:semaine().key;ui.flash="corr-"+x.id;save();render();ui.flash=null;return}
@@ -1616,7 +1679,8 @@ async function loadServer(){
     if(r.ok){const recs=await r.json();if(recs.length){const m=mapSpecialites(recs);
       if(Object.keys(m.byVoie).length){speData={source:"open",label:"open data Parcoursup, spécialités des bacheliers généraux",byVoie:m.byVoie};render()}}}}catch(e){}
   const get=async u=>{try{const r=await fetch(u);return r.ok?await r.json():null}catch(e){return null}};
-  const [src,bar,ins,loy,met,app,ij,prg]=await Promise.all(["api/sources","api/baremes","api/insertion","api/loyers","api/metiers?n=5000","api/apprentissage","api/inserjeunes","api/programmes"].map(get));
+  const [src,bar,ins,loy,met,app,ij,prg,sc]=await Promise.all(["api/sources","api/baremes","api/insertion","api/loyers","api/metiers?n=5000","api/apprentissage","api/inserjeunes","api/programmes","api/scei"].map(get));
+  if(Array.isArray(sc))ext.scei=sc;
   if(prg&&prg.matieres)PROGRAMMES=prg;
   if(src)ext.sources=src;
   if(bar&&bar.droits){BAREMES.droits=bar.droits;BAREMES.bourses=bar.bourses.montants;BAREMES.boursesSrc=bar.bourses.source;

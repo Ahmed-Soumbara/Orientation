@@ -231,5 +231,12 @@ def api_baremes():
 
 
 
+@app.get("/api/scei")
+def api_scei():
+    """Écoles après une prépa : statistiques SCEI par école et par filière (python scei.py ou python data.py)."""
+    import scei
+    return scei.load_scei()
+
+
 # Le site (static/index.html) est servi à la racine, après les routes /api.
 app.mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True), name="site")

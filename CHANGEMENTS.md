@@ -260,3 +260,39 @@ Remplace les missions de la v22. Le prof principal chaque mois, la phrase hebdom
 - Une mission faite est rayée d'un trait fin qui se trace quand on coche, et son texte passe en gris. Le fluo reste réservé à ce qui doit attirer l'œil.
 - La barre de la semaine et « Mon année » passent à l'encre bleue.
 - Correction : un contrôle corrigé restait invisible au lieu d'apparaître coché, ce qui faisait baisser le total de la semaine.
+
+## Visite guidée retirée (v25)
+
+La visite en trois étapes est supprimée, ainsi que l'entrée « Recommencer la visite » du menu. Le site s'ouvre directement sur « Où j'en suis ». Classe, spécialités et objectif se règlent dans « Mon profil » et dans « Comment j'y arrive ».
+
+## Écoles après une prépa (SCEI), recherche et petits effectifs (v26)
+
+**Écoles qui recrutent après une prépa.** Elles ne sont pas dans Parcoursup : on y entre par concours, via le SCEI. Nouveau connecteur `scei.py`, autonome.
+- Il lit les pages de statistiques publiques de scei-concours.fr, une requête par seconde au plus.
+- Il garde, par école et par filière : places, inscrits, admissibles, classés, entrés, et le rang médian ou du dernier appelé quand la page le donne.
+- Il écrit `data/scei.csv`, servi par `/api/scei`, et `python data.py` le met à jour avec les autres sources.
+- Page vérifiée le 4/11 : `stat2025/stat_generale_2025.html` (une ligne par filière, colonnes Inscrits, Admissibles, Classés, Propositions, Entrés, Places).
+- **Le détail par école existe, mais son adresse et son format exacts restent à confirmer** : lancer `python explorer_scei.py` et envoyer la sortie. Si une colonne n'est pas reconnue, ajouter son nom dans `COLS` en haut de `scei.py`.
+- Site : une recherche par nom d'école (« sudparis ») affiche ses chiffres par filière de prépa dans « Les établissements ». La fiche « École d'ingénieurs » montre le total par filière. La page Données liste la source.
+- Tests : `test_scei.py`, avec une page d'exemple construite pour le test (`fixtures/scei_exemple.html`).
+
+**Petits effectifs.** Sous 10 admis néo-bacheliers (3 142 formations sur 13 953), la zone n'est plus affichée : « trop peu d'admis ». Un seul admis y pèse plus de 10 %. De 10 à 19 admis, la zone reste affichée avec une fiabilité faible.
+
+**Recherche d'établissements.**
+- Elle cherche des débuts de mots, et non plus des bouts de texte : « x » ne trouve plus les 2 431 formations qui contiennent la lettre x.
+- Les mots d'une ou deux lettres doivent être entiers.
+- Quelques noms d'usage sont traduits vers le nom officiel : « X » et « l'X » vers « Ecole polytechnique », « IEP » vers « études politiques », « UTC » vers « technologie de Compiègne ».
+
+Tests : 34.
+
+## SCEI : connecteur réglé sur les vraies pages (v27)
+
+Réglé à partir de la sortie de `explorer_scei.py` lancé sur l'ordinateur de l'équipe :
+- Le portail `statistiques.html` renvoie par un script vers `stat2025/stat_sommaire_2025.html`, qui donne une page par filière : `stat2025/mp.html`, `mpi.html`, `pc.html`, `psi.html`, `pt.html`, `tsi.html`, `bcpst.html`, `tb.html` et `tpc.html`.
+- Chaque page contient un seul tableau. Le nom du concours y est écrit sur une ligne à part (« Banque ECOLE POLYTECHNIQUE - interENS », « CENTRALE-SUPELEC »…), puis viennent les écoles. Le connecteur garde ce nom dans la colonne `concours`.
+- La page générale range les années en lignes (« 2025 », puis les filières). Les lignes « Inter-Filière » et « Totaux » sont sautées.
+- La session 2026 répond 401 : le connecteur recule à 2025.
+- Résultat de la session 2025 : 2 067 lignes par école, 583 écoles. Télécom SudParis, par exemple, sur 5 filières : MP 90 places, MPI 30, PC 42, PSI 42, TSI 2.
+- Attention : les inscrits, admissibles et classés sont comptés par concours. Seuls les entrés et les places sont propres à l'école, et le site le précise.
+
+Tests : 36.

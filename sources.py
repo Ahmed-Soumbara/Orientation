@@ -595,6 +595,11 @@ SOURCES = {
                     "acces": "API open data", "fetch": fetch_inserjeunes, "file": INSERJEUNES_FILE,
                     "remplace": "Aucune donnée d'insertion pour les BTS"},
 }
+# 7. Écoles après une prépa (SCEI) : module autonome scei.py, enregistré ici pour python data.py et /api/sources
+import scei
+SOURCES["scei"] = {"label": "Écoles après une prépa (statistiques SCEI)", "producteur": "SCEI (scei-concours.fr)",
+                   "acces": "Pages HTML publiques, lues une fois par an", "fetch": scei.fetch_scei, "file": scei.SCEI_FILE,
+                   "remplace": "Rien : les écoles recrutant après une prépa n'étaient pas dans l'application"}
 LIVE = {"criteres": {"label": "Critères d'examen des vœux", "producteur": "Fiches Parcoursup (Licence Ouverte Etalab 2.0)",
                      "acces": "Lecture de la fiche à la demande, mise en cache", "remplace": "Matières clés déduites par l'équipe"},
         "communes": {"label": "Communes et coordonnées", "producteur": "API Découpage administratif (geo.api.gouv.fr)",
