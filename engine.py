@@ -10,11 +10,12 @@ MENTIONS = ["sans", "ab", "b", "tb"]          # tb = très bien et félicitation
 RANK = {m: i for i, m in enumerate(MENTIONS)}
 LABELS = {"sans": "sans mention", "ab": "assez bien", "b": "bien", "tb": "très bien"}
 
-# Seuils à calibrer sur les vraies données (placeholders).
-CORE_SHARE = 0.50      # ton niveau >= celui de 50 % des admis -> cœur
-EDGE_SHARE = 0.15      # >= 15 % des admis -> marge, sinon en dessous
-RATE_VERY_SELECTIVE = 0.15
-RATE_SELECTIVE = 0.50
+# Règles de l'application (les mêmes que dans le site), à faire valider.
+CORE_SHARE = 0.40      # au moins 40 % des admis avaient ta mention ou moins -> cœur
+EDGE_SHARE = 0.12      # au moins 12 % -> marge, sinon en dessous
+RATE_VERY_SELECTIVE = 0.25   # taux d'accès officiel < 25 % -> très sélective
+RATE_SELECTIVE = 0.60
+RATE_CAP_CORE = 0.20   # taux d'accès < 20 % : la zone ne dépasse pas « marge »
 MIN_ADMITS_HIGH, MIN_ADMITS_MEDIUM = 60, 20
 
 LIMITS = ("Appréciations des professeurs, lettre de motivation, lycée d'origine "
@@ -40,6 +41,8 @@ class FormationStats:
     voe_tot: int = 0                 # candidats
     acc_tot: int = 0                 # admis (ont accepté la proposition)
     capa_fin: int = 0                # places
+    neobac: int = 0                  # admis néo-bacheliers : les seuls dont la mention est publiée
+    taux_acces: float | None = None  # taux d'accès officiel (taux_acces_ens), en %
     admits_by_mention: dict = field(default_factory=dict)   # {"sans":n,"ab":n,"b":n,"tb":n}
     source: str = "Open data Parcoursup"
 
@@ -49,7 +52,10 @@ class FormationStats:
 
     @property
     def admission_rate(self):
-        """Admis / candidats. Approximation du taux d'accès, PAS le taux officiel."""
+        """Taux d'accès officiel Parcoursup (part des candidats qui ont reçu une proposition).
+        À défaut seulement, admis / candidats, qui le sous-estime fortement."""
+        if self.taux_acces is not None and self.taux_acces == self.taux_acces:
+            return self.taux_acces / 100
         return self.acc_tot / self.voe_tot if self.voe_tot else None
 
     @property
@@ -89,9 +95,11 @@ def confidence(f: FormationStats, current_session: int) -> tuple[str, list[str]]
     if f.session < current_session - 1:
         level = max(level - 1, 0)
         reasons.append(f"données de la session {f.session}")
-    if f.n_known < 0.8 * f.acc_tot:
+    # Seuls les néo-bacheliers ont une mention : on compare à eux, pas à tous les admis
+    # (sinon la confiance baisse pour une formation sur deux à tort).
+    if f.neobac and f.n_known < 0.8 * f.neobac:
         level = max(level - 1, 0)
-        reasons.append("mention inconnue pour une part des admis")
+        reasons.append("mention inconnue pour une part des admis néo-bacheliers")
     return ["faible", "moyen", "élevé"][level], reasons
 
 
@@ -118,6 +126,8 @@ MESSAGES = {
     "edge": "Une partie des admis avait ton profil, mais la plupart avaient une mention plus élevée.",
     "below": "Peu d'admis avaient ta mention probable : voici ce qui ferait la différence.",
     "unknown": "Les données publiques sont insuffisantes pour te situer sur cette formation.",
+    "capped": ("Ton niveau correspond à celui de nombreux admis, mais la formation est très demandée : "
+               "moins d'un candidat sur cinq reçoit une proposition. Le dossier fera la différence."),
 }
 
 
@@ -132,9 +142,15 @@ def position(avg: float, f: FormationStats, current_session: int) -> Position:
         zone = "edge"
     else:
         zone = "below"
+    # Le plafond ne s'applique qu'avec le taux officiel (l'approximation admis/candidats le sous-estime).
+    official = f.taux_acces is not None and f.taux_acces == f.taux_acces
+    capped = zone == "core" and official and f.taux_acces / 100 < RATE_CAP_CORE
+    if capped:
+        zone = "edge"
     conf, reasons = confidence(f, current_session)
+    msg = MESSAGES["capped"] if capped else MESSAGES[zone]
     return Position(
-        zone=zone, message=MESSAGES[zone], confidence=conf, confidence_reasons=reasons,
+        zone=zone, message=msg, confidence=conf, confidence_reasons=reasons,
         selectivity=selectivity(f), student_mention=LABELS[mention],
         share_at_or_below=None if share is None else round(share, 3),
         admission_rate=None if f.admission_rate is None else round(f.admission_rate, 3),

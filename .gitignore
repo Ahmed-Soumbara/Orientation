@@ -1,0 +1,13 @@
+# Clés d'accès aux API (France Travail, API Apprentissage) : ne jamais les publier
+.env
+
+# Environnement Python
+venv/
+__pycache__/
+.pytest_cache/
+
+# Données téléchargées : se régénèrent avec « python data.py »
+data/
+
+# Sorties des scripts d'exploration
+explore_parcoursup/

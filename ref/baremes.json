@@ -1,0 +1,25 @@
+{
+  "annee": "2026-2027",
+  "droits": {
+    "licence": 178, "master": 255, "inge": 630,
+    "source": "etudiant.gouv.fr, droits d'inscription 2026-2027",
+    "url": "https://www.etudiant.gouv.fr/fr/droits-d-inscription-1489"
+  },
+  "bourses": {
+    "montants": {"0bis": 1454, "1": 2163, "2": 3071, "3": 3828, "4": 4587, "5": 5212, "6": 5506, "7": 6335},
+    "source": "Bourses sur critères sociaux 2026-2027, versées en 10 mensualités ; boursiers exonérés des droits d'inscription et de la CVEC. À vérifier sur l'arrêté publié au Journal officiel.",
+    "url": "https://www.letudiant.fr/lifestyle/aides-financieres/quels-sont-les-montants-de-la-bourse-crous-pour-la-rentree-2026-2027.html"
+  },
+  "apprenti": {
+    "grille": {"16": [504.10, 728.14, 1026.86], "18": [802.82, 952.18, 1250.90], "21": [989.52, 1138.88, 1456.28], "26": [1867.02, 1867.02, 1867.02]},
+    "source": "Salaire brut mensuel minimum des apprentis au 1er juin 2026 (SMIC horaire 12,31 €). À vérifier sur le Code du travail.",
+    "url": "https://www.legisocial.fr/reperes-sociaux/remuneration-contrat-alternance-apprentissage-2026.html"
+  },
+  "vie": {
+    "loyerParis": 962, "loyerIdf": 823, "loyerNational": 637, "alim": 181, "transport": 152,
+    "surfaceStudio": 25,
+    "source": "Loyers de secours : LocService 2026 (Paris, petite couronne) et indicateur FAGE 2026 (moyenne nationale). Alimentation et transports : indicateur FAGE 2026. Quand la carte des loyers est chargée, le loyer est calculé par commune : loyer au m² × 25 m².",
+    "url": "https://www.lafinancepourtous.com/2026/09/10/etudiants-le-cout-de-la-rentree-depasse-3-200-e-en-2026/"
+  },
+  "distanceChezParentsKm": 40
+}

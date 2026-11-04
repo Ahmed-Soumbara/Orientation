@@ -1,0 +1,262 @@
+{
+  "_lisez_moi": "Transcription de textes officiels, une entrée par chapitre ou type d'exercice, avec sa source. Rien n'est ajouté de mémoire : un niveau dont le texte n'a pas été récupéré reste vide avec la mention a_completer. À mettre à jour quand un nouvel arrêté de programme paraît au Bulletin officiel.",
+  "verifie_le": "2026-11-04",
+  "sources": {
+    "maths1": {
+      "l": "Programme de spécialité de mathématiques de première générale, arrêté du 26 février 2026, BO n° 14 du 2 avril 2026 (NOR MENE2602917A), en vigueur à la rentrée 2026 (copie publiée par l'académie de Bordeaux)",
+      "u": "https://ent2d.ac-bordeaux.fr/disciplines/mathematiques/wp-content/uploads/sites/3/2026/06/3-Programme-denseignement-de-specialite-de-mathematiques-de-la-classe-de-premiere-de-la-voie-generale.pdf"
+    },
+    "bo14": {
+      "l": "Bulletin officiel n° 14 du 2 avril 2026 (sommaire des arrêtés de programmes de mathématiques)",
+      "u": "https://www.education.gouv.fr/sites/default/files/document/Bulletin%20officiel%20n%C2%B0%2014%20du%202%20avril%202026-515432.pdf"
+    },
+    "eaf": {
+      "l": "Note de service du 23 juillet 2020 (NOR MENE2019312N), épreuves anticipées de français à compter de la session 2021 (copie publiée par l'académie de Nancy-Metz)",
+      "u": "https://sites.ac-nancy-metz.fr/lettres/wp-content/uploads/2020/09/Baccalaureat-general-et-technologique-31-07-2020.pdf"
+    },
+    "eamaths": {
+      "l": "CIDJ, l'épreuve anticipée de mathématiques en première (session 2026)",
+      "u": "https://www.cidj.com/s-orienter/apres-la-3eme/bac-2026-la-nouvelle-epreuve-de-maths-en-premiere"
+    },
+    "eamaths_bo": {
+      "l": "Note de service définissant l'épreuve anticipée de mathématiques, BO n° 24 de 2025 (NOR MENE2515469N)",
+      "u": "https://www.education.gouv.fr/bo/2025/Hebdo24/MENE2515469N"
+    },
+    "maths_tle": {
+      "l": "Programme de spécialité de mathématiques de terminale générale, arrêté du 26 février 2026, BO n° 14 du 2 avril 2026 (NOR MENE2602919A), en vigueur à la rentrée 2027 (annexe officielle, fichier daté du 19 mars 2026)",
+      "u": "https://www.education.gouv.fr/sites/default/files/document/Bulletin%20officiel%20n%C2%B0%2014%20du%202%20avril%202026-515432.pdf"
+    }
+  },
+  "matieres": {
+    "maths": {
+      "label": "Mathématiques (spécialité)",
+      "niveaux": {
+        "1re": {
+          "type": "chapitres",
+          "source": "maths1",
+          "etiquettes": [
+            {
+              "id": "m1-auto",
+              "l": "Automatismes",
+              "partie": "Transversal"
+            },
+            {
+              "id": "m1-algo",
+              "l": "Algorithmique et programmation (listes)",
+              "partie": "Transversal"
+            },
+            {
+              "id": "m1-suites",
+              "l": "Suites numériques, modèles discrets",
+              "partie": "Algèbre"
+            },
+            {
+              "id": "m1-second",
+              "l": "Équations, fonctions polynômes du second degré",
+              "partie": "Algèbre"
+            },
+            {
+              "id": "m1-deriv",
+              "l": "Dérivation",
+              "partie": "Analyse"
+            },
+            {
+              "id": "m1-variations",
+              "l": "Variations et courbes représentatives des fonctions",
+              "partie": "Analyse"
+            },
+            {
+              "id": "m1-exp",
+              "l": "Fonction exponentielle",
+              "partie": "Analyse"
+            },
+            {
+              "id": "m1-trigo",
+              "l": "Trigonométrie",
+              "partie": "Analyse"
+            },
+            {
+              "id": "m1-vect",
+              "l": "Calcul vectoriel et produit scalaire",
+              "partie": "Géométrie"
+            },
+            {
+              "id": "m1-repere",
+              "l": "Géométrie repérée",
+              "partie": "Géométrie"
+            },
+            {
+              "id": "m1-probacond",
+              "l": "Probabilités conditionnelles et indépendance",
+              "partie": "Probabilités et statistiques"
+            },
+            {
+              "id": "m1-va",
+              "l": "Variables aléatoires réelles",
+              "partie": "Probabilités et statistiques"
+            },
+            {
+              "id": "m1-exper",
+              "l": "Expérimentations",
+              "partie": "Probabilités et statistiques"
+            }
+          ]
+        },
+        "Terminale": {
+          "type": "chapitres",
+          "source": "maths_tle",
+          "en_vigueur": "rentrée 2027",
+          "avertissement": "Ces chapitres sont ceux du nouveau programme, qui s'applique à la rentrée 2027. En 2026-2027, les élèves de terminale suivent encore le programme de 2019 (BO spécial n° 8 du 25 juillet 2019), non transcrit ici : vérifie avec ton professeur que les intitulés correspondent.",
+          "etiquettes": [
+            {
+              "id": "mt-algo",
+              "l": "Algorithmique et programmation",
+              "partie": "Transversal"
+            },
+            {
+              "id": "mt-denombr",
+              "l": "Combinatoire et dénombrement",
+              "partie": "Algèbre et géométrie"
+            },
+            {
+              "id": "mt-espace",
+              "l": "Manipulation des vecteurs, des droites et des plans de l'espace",
+              "partie": "Algèbre et géométrie"
+            },
+            {
+              "id": "mt-ortho",
+              "l": "Orthogonalité et distances dans l'espace",
+              "partie": "Algèbre et géométrie"
+            },
+            {
+              "id": "mt-param",
+              "l": "Représentations paramétriques et équations cartésiennes",
+              "partie": "Algèbre et géométrie"
+            },
+            {
+              "id": "mt-suites",
+              "l": "Suites",
+              "partie": "Analyse"
+            },
+            {
+              "id": "mt-limites",
+              "l": "Limites des fonctions",
+              "partie": "Analyse"
+            },
+            {
+              "id": "mt-deriv",
+              "l": "Compléments sur la dérivation",
+              "partie": "Analyse"
+            },
+            {
+              "id": "mt-continu",
+              "l": "Continuité des fonctions d'une variable réelle",
+              "partie": "Analyse"
+            },
+            {
+              "id": "mt-ln",
+              "l": "Fonction logarithme",
+              "partie": "Analyse"
+            },
+            {
+              "id": "mt-trigo",
+              "l": "Fonctions sinus et cosinus",
+              "partie": "Analyse"
+            },
+            {
+              "id": "mt-primitives",
+              "l": "Primitives, équations différentielles",
+              "partie": "Analyse"
+            },
+            {
+              "id": "mt-integrale",
+              "l": "Calcul intégral",
+              "partie": "Analyse"
+            },
+            {
+              "id": "mt-bernoulli",
+              "l": "Succession d'épreuves indépendantes, schéma de Bernoulli",
+              "partie": "Probabilités"
+            },
+            {
+              "id": "mt-sommeva",
+              "l": "Sommes de variables aléatoires",
+              "partie": "Probabilités"
+            },
+            {
+              "id": "mt-lgn",
+              "l": "Concentration, loi des grands nombres",
+              "partie": "Probabilités"
+            }
+          ]
+        }
+      }
+    },
+    "francais": {
+      "label": "Français",
+      "niveaux": {
+        "1re": {
+          "type": "exercices",
+          "source": "eaf",
+          "etiquettes": [
+            {
+              "id": "f-comm",
+              "l": "Commentaire de texte",
+              "partie": "Écrit"
+            },
+            {
+              "id": "f-diss",
+              "l": "Dissertation sur une œuvre du programme",
+              "partie": "Écrit"
+            },
+            {
+              "id": "f-lect",
+              "l": "Lecture à voix haute",
+              "partie": "Oral"
+            },
+            {
+              "id": "f-expl",
+              "l": "Explication linéaire",
+              "partie": "Oral"
+            },
+            {
+              "id": "f-gram",
+              "l": "Question de grammaire",
+              "partie": "Oral"
+            },
+            {
+              "id": "f-oeuvre",
+              "l": "Présentation d'une œuvre et entretien",
+              "partie": "Oral"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "epreuves": [
+    {
+      "id": "ea-maths",
+      "matiere": "maths",
+      "classe": "1re",
+      "l": "Épreuve anticipée de mathématiques (juin)",
+      "detail": "2 heures, sans calculatrice, coefficient 2. Partie 1 : QCM d'automatismes, 6 points. Partie 2 : deux ou trois exercices indépendants, 14 points. Avec la spécialité, le sujet porte sur le programme de première de la spécialité. La note est intégrée au dossier Parcoursup.",
+      "sources": [
+        "eamaths",
+        "eamaths_bo"
+      ],
+      "reserve": "Définition de la session 2026. Une note de service de 2026 (BO spécial n° 4, NOR MENE2622640N) l'a actualisée : texte non récupéré, à vérifier."
+    },
+    {
+      "id": "eaf",
+      "matiere": "francais",
+      "classe": "1re",
+      "l": "Épreuve anticipée de français (juin)",
+      "detail": "Écrit de 4 heures, coefficient 5 : commentaire de texte ou dissertation sur une œuvre du programme. Oral de 20 minutes, coefficient 5 : lecture (2 points), explication linéaire (8), grammaire (2), présentation d'une œuvre et entretien (8).",
+      "sources": [
+        "eaf"
+      ],
+      "reserve": "Texte de 2020. Les modifications ultérieures éventuelles n'ont pas été vérifiées."
+    }
+  ]
+}

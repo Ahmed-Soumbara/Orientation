@@ -19,6 +19,29 @@ def fake_raw():
     return df
 
 
+def test_confidence_uses_neobac_not_all_admits():
+    # 100 admis dont 70 néo-bacheliers, tous avec mention : la confiance ne doit pas baisser.
+    f = FormationStats("x", 2025, voe_tot=500, acc_tot=100, neobac=70,
+                       admits_by_mention={"sans": 20, "ab": 30, "b": 15, "tb": 5})
+    assert position(12.5, f, 2025).confidence == "élevé"
+
+
+def test_official_access_rate_and_cap():
+    # Profil courant chez les admis, mais seulement 13 % de candidats acceptés : pas « cœur ».
+    f = FormationStats("BUT TC Évry", 2025, voe_tot=3000, acc_tot=106, neobac=106, taux_acces=13,
+                       admits_by_mention={"sans": 35, "ab": 53, "b": 16, "tb": 2})
+    p = position(12.5, f, 2025)
+    assert p.admission_rate == 0.13 and p.selectivity == "très sélective"
+    assert p.zone == "edge"
+
+
+def test_domains_use_whole_words():
+    from tree import domain_of
+    assert domain_of({"fili": "CPGE", "form": "Classe préparatoire littéraire", "detail": "CPGE - Lettres"}) == "Lettres, langues et arts"
+    assert domain_of({"fili": "Autre formation", "form": "D.E secteur sanitaire", "detail": "D.E Infirmier"}) == "Santé et social"
+    assert domain_of({"fili": "Licence", "form": "Licence - Droit-économie-gestion", "detail": "Licence - Droit"}) == "Droit et sciences politiques"
+
+
 def test_mentions():
     assert [mention_from_average(x) for x in (10, 12.5, 15, 17)] == ["sans", "ab", "b", "tb"]
 
@@ -83,6 +106,18 @@ def test_api_endpoints():
     s = c.get("/api/suggest", params={"avg": 12.5, "n": 3}).json()
     assert set(s) == {"sure", "edge", "below"}
     assert c.get("/").status_code == 200           # le site est servi à la racine
+
+
+def test_specialites_endpoint(tmp_path, monkeypatch):
+    import api, data
+    from fastapi.testclient import TestClient
+    monkeypatch.setattr(data, "SPE_CACHE", tmp_path / "specialites.csv")
+    c = TestClient(api.app)
+    assert c.get("/api/specialites.json").json() == []          # pas encore téléchargé
+    (tmp_path / "specialites.csv").write_text(
+        "doublette;formation;acceptations\nMathématiques&SES;BUT - Techniques de commercialisation;40\n", encoding="utf-8")
+    rows = c.get("/api/specialites.json").json()
+    assert rows[0]["acceptations"] == 40
 
 
 def test_raw_csv_and_site(tmp_path, monkeypatch):

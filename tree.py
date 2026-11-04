@@ -3,22 +3,32 @@ import pandas as pd
 from engine import FormationStats, position
 from data import slug
 
-# Parcoursup n'a pas de notion de « domaine » : classement par mots-clés (à affiner avec l'Onisep).
+# Parcoursup n'a pas de notion de « domaine » : classement par expressions régulières
+# (à remplacer par la nomenclature Onisep). On cherche des MOTS entiers et non des
+# morceaux de mots : « las » trouvait « classe », « ect » trouvait « secteur ».
+# L'ordre compte : la première règle qui correspond l'emporte.
+import re, unicodedata
+
 DOMAINS = {
-    "Commerce et gestion": ["commerc", "gestion", "management", "marketing", "vente", "comptab", "ecg", "ecs", "ect", "économie"],
-    "Ingénierie et numérique": ["ingénieur", "ingenieur", "informatique", "numérique", "génie", "mpsi", "pcsi", "mp2i", "ptsi", "électronique", "mécanique"],
-    "Santé et social": ["santé", "sante", "infirm", "pass", "las", "kiné", "paramédical", "social", "médecine"],
-    "Droit et sciences politiques": ["droit", "politique", "iep", "sciences po"],
-    "Lettres, langues et arts": ["lettres", "langue", "arts", "design", "histoire", "philosophie", "communication", "hypokhâgne", "khâgne"],
-    "Sciences": ["physique", "chimie", "biologie", "mathématiques", "svt", "sciences"],
+    "Santé et social": r"\bpass\b|licence_las|\bsante\b|sanitaire|medecine|infirm|kine|pharma|maieut|orthophon|\bifsi\b|psychomot|ergotherap|secteur social|\bd\.e\b",
+    "Droit et sciences politiques": r"\bdroit\b|sciences politiques|\bsciences po\b|\biep\b|juridique",
+    "Ingénierie et numérique": r"ingenieur|informatique|numerique|\bgenie\b|\b(mpsi|pcsi|mp2i|ptsi|tsi)\b|electronique|mecanique|\bsio\b",
+    "Commerce et gestion": r"commerc|gestion|management|marketing|\bvente\b|comptab|\b(ecg|ect)\b|econom|\bdcg\b|negociation",
+    "Lettres, langues et arts": r"lettres|langue|\barts?\b|design|dn made|histoire|philosophie|communication|hypokhagne|khagne",
+    "Sciences": r"physique|chimie|biologie|mathematique|\bsvt\b|sciences",
 }
+_RX = {name: re.compile(rx) for name, rx in DOMAINS.items()}
 DOMAIN_NAMES = list(DOMAINS) + ["Autres"]
 
 
+def _norm(s) -> str:
+    return unicodedata.normalize("NFD", str(s)).encode("ascii", "ignore").decode().lower()
+
+
 def domain_of(row) -> str:
-    text = f"{row.get('form', '')} {row.get('detail', '')} {row.get('fili', '')}".lower()
-    for name, keys in DOMAINS.items():
-        if any(k in text for k in keys):
+    text = _norm(f"{row.get('fili', '')} {row.get('form', '')} {row.get('detail', '')}")
+    for name, rx in _RX.items():
+        if rx.search(text):
             return name
     return "Autres"
 
@@ -50,11 +60,21 @@ def prepare(df, academie=None, query=None, domain=None, min_admits=1) -> pd.Data
     return d.copy()
 
 
+def taux_of(g: pd.DataFrame):
+    """Taux d'accès d'un groupe : moyenne des taux officiels pondérée par le nombre de candidats."""
+    if "taux" not in g:
+        return None
+    ok = g[g["taux"].notna() & (g["voe_tot"] > 0)]
+    return float((ok["taux"] * ok["voe_tot"]).sum() / ok["voe_tot"].sum()) if len(ok) else None
+
+
 def stats_of(g: pd.DataFrame, name: str) -> FormationStats:
     return FormationStats(
         name=name, session=int(g["session"].max()),
         voe_tot=int(g["voe_tot"].sum()), acc_tot=int(g["acc_tot"].sum()),
         capa_fin=int(g["capa_fin"].sum()) if "capa_fin" in g else 0,
+        neobac=int(g["neobac"].sum()) if "neobac" in g else 0,
+        taux_acces=taux_of(g),
         admits_by_mention={"sans": int(g["m_sans"].sum()), "ab": int(g["m_ab"].sum()),
                            "b": int(g["m_b"].sum()), "tb": int(g["m_tb"].sum())})
 
@@ -118,19 +138,12 @@ def suggest(df: pd.DataFrame, avg: float, academie: str | None = None,
     sure (cœur, confiance suffisante), edge (à la marge), below (ambitieuses)."""
     d = prepare(df, academie, None, domain, 1)
     cs = int(df["session"].max())
-    agg = (d.groupby(["domain", "form", "detail"])
-             .agg(session=("session", "max"), voe_tot=("voe_tot", "sum"), acc_tot=("acc_tot", "sum"),
-                  capa_fin=("capa_fin", "sum"), m_sans=("m_sans", "sum"), m_ab=("m_ab", "sum"),
-                  m_b=("m_b", "sum"), m_tb=("m_tb", "sum"), n_schools=("uai", "nunique"))
-             .reset_index())
     out = {"sure": [], "edge": [], "below": []}
-    for r in agg.itertuples(index=False):
-        if r.acc_tot < min_admits:
+    for (dom, form, detail), g in d.groupby(["domain", "form", "detail"]):
+        if g["acc_tot"].sum() < min_admits:
             continue
-        s = FormationStats(name=r.detail, session=int(r.session), voe_tot=int(r.voe_tot),
-                           acc_tot=int(r.acc_tot), capa_fin=int(r.capa_fin),
-                           admits_by_mention={"sans": int(r.m_sans), "ab": int(r.m_ab),
-                                              "b": int(r.m_b), "tb": int(r.m_tb)})
+        s = stats_of(g, detail)
+        r = type("R", (), {"detail": detail, "form": form, "domain": dom, "n_schools": g["uai"].nunique()})
         p = position(avg, s, cs)
         item = {"label": r.detail, "parcours": r.form, "domain": r.domain,
                 "n_schools": int(r.n_schools), "acc_tot": s.acc_tot, "position": p.to_dict()}
